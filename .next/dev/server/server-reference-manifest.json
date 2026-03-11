@@ -1,0 +1,45 @@
+{
+  "node": {
+    "005df96b5c7ff31c41d0d3ee865350f4b12eee9e45": {
+      "workers": {
+        "app/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fdata%2Fdata%2Fcom.termux%2Ffiles%2Fhome%2Fnext1%2Fapp%2Factions.ts%22%2C%5B%7B%22id%22%3A%22005df96b5c7ff31c41d0d3ee865350f4b12eee9e45%22%2C%22exportedName%22%3A%22getProducts%22%2C%22filename%22%3A%22app%2Factions.ts%22%7D%2C%7B%22id%22%3A%224035afc9e0b178c6198ca8d13bc8a44b4b55d40afe%22%2C%22exportedName%22%3A%22uploadImageAction%22%2C%22filename%22%3A%22app%2Factions.ts%22%7D%2C%7B%22id%22%3A%226076e1776e6b187ff86d6e1a73ea80d459549fc679%22%2C%22exportedName%22%3A%22createFolder1%22%2C%22filename%22%3A%22app%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/page": "action-browser"
+      },
+      "filename": "app/actions.ts",
+      "exportedName": "getProducts"
+    },
+    "4035afc9e0b178c6198ca8d13bc8a44b4b55d40afe": {
+      "workers": {
+        "app/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fdata%2Fdata%2Fcom.termux%2Ffiles%2Fhome%2Fnext1%2Fapp%2Factions.ts%22%2C%5B%7B%22id%22%3A%22005df96b5c7ff31c41d0d3ee865350f4b12eee9e45%22%2C%22exportedName%22%3A%22getProducts%22%2C%22filename%22%3A%22app%2Factions.ts%22%7D%2C%7B%22id%22%3A%224035afc9e0b178c6198ca8d13bc8a44b4b55d40afe%22%2C%22exportedName%22%3A%22uploadImageAction%22%2C%22filename%22%3A%22app%2Factions.ts%22%7D%2C%7B%22id%22%3A%226076e1776e6b187ff86d6e1a73ea80d459549fc679%22%2C%22exportedName%22%3A%22createFolder1%22%2C%22filename%22%3A%22app%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/page": "action-browser"
+      },
+      "filename": "app/actions.ts",
+      "exportedName": "uploadImageAction"
+    },
+    "6076e1776e6b187ff86d6e1a73ea80d459549fc679": {
+      "workers": {
+        "app/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fdata%2Fdata%2Fcom.termux%2Ffiles%2Fhome%2Fnext1%2Fapp%2Factions.ts%22%2C%5B%7B%22id%22%3A%22005df96b5c7ff31c41d0d3ee865350f4b12eee9e45%22%2C%22exportedName%22%3A%22getProducts%22%2C%22filename%22%3A%22app%2Factions.ts%22%7D%2C%7B%22id%22%3A%224035afc9e0b178c6198ca8d13bc8a44b4b55d40afe%22%2C%22exportedName%22%3A%22uploadImageAction%22%2C%22filename%22%3A%22app%2Factions.ts%22%7D%2C%7B%22id%22%3A%226076e1776e6b187ff86d6e1a73ea80d459549fc679%22%2C%22exportedName%22%3A%22createFolder1%22%2C%22filename%22%3A%22app%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/page": "action-browser"
+      },
+      "filename": "app/actions.ts",
+      "exportedName": "createFolder1"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "QWmsorTXLo45b7ecalILArh1QmLdOWFkuHaVYgld7qQ="
+}
