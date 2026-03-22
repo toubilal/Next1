@@ -1,23 +1,44 @@
 @import "tailwindcss";
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
 :root {
-  --background: #ffffff;
+  --background: #f8f9fa; /* خلفية فاتحة جداً مريحة */
   --foreground: #171717;
+  
+  /* الألوان الخاصة ببراند المتجر */
+  --color-primary: #d4af37;     /* اللون الذهبي الأساسي */
+  --color-secondary: #64748b;    /* رمادي للنصوص الثانوية */
+  --color-card: #ffffff;         /* لون خلفية البطاقة */
+  --color-border: #e2e8f0;       /* لون الحدود ناعم */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  
+  /* ربط المتغيرات بأسماء كلاسات تيلويند */
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-card: var(--color-card);
+  --color-border: var(--color-border);
 }
 
+/* إذا أردت إلغاء الوضع الليلي مؤقتاً ليبقى المتجر فاتحاً دائماً */
+/* أو اتركه كما هو إذا أردت أن يتغير مع إعدادات الهاتف *//* 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0f0f0f;
     --foreground: #ededed;
+    --color-card: #1a1a1a;
+    --color-border: #2d2d2d;
   }
 }
+*/
+
 
 body {
   background: var(--background);

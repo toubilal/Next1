@@ -75,7 +75,7 @@ export function Hh() {
       )}
     
     
-      <Toaster />
+      
       
       {/* خانات الإدخال والزر */}
       <div className="flex flex-col gap-3 w-full max-w-xs">

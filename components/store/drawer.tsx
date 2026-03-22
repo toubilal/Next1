@@ -1,88 +1,112 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link"; // لاستخدام التنقل السريع بين الصفحات
+import Link from "next/link";
+import { Home, PlusCircle, Package, Settings, BarChart3, LogOut, Menu, X, Bell } from "lucide-react"; // استخدام مكتبة icons أفضل
 
-export  function Drawer() {
+interface DrawerProps {
+  isAdmin?: boolean; 
+}
+
+export function Drawer({ isAdmin = false }: DrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // قائمة العناصر لتسهيل الإضافة والتعديل مستقبلاً
-  const menuItems = [
-    { name: "الرئيسية", path: "/", icon: "🏠" },
-    { name: "إضافة منتج", path: "/add-product", icon: "➕" },
-    { name: "المخزن", path: "/inventory", icon: "📦" },
-    { name: "الإعدادات", path: "/settings", icon: "⚙️" },
+  // 1. تعريف الروابط العامة (للجميع)
+  const publicItems = [
+    { name: "الرئيسية", path: "/", icon: <Home size={20} /> },
+  ];
+
+  // 2. تعريف روابط الإدارة (تظهر فقط للأدمن)
+  const adminItems = [
+    { name: "إدارة المنتجات", path: "/products", icon: <Package size={20} /> },
+    { name: "الإحصائيات", path: "/stats", icon: <BarChart3 size={20} /> }, // الصفحة التي سنبنيها غداً
+    { name: "الإعدادات", path: "/settings", icon: <Settings size={20} /> },
   ];
 
   return (
     <>
-      {/* --- الـ Navbar (الشريط العلوي) --- */}
-      <header className="flex items-center justify-between p-4 bg-white shadow-sm border-b sticky top-0 z-[80]">
+      {/* --- الـ Navbar العلوي --- */}
+      <header className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-md shadow-sm border-b sticky top-0 z-[80]" dir="rtl">
         <div className="flex items-center gap-3">
-          <button onClick={() => setIsOpen(true)} className="p-2 hover:bg-gray-100 rounded-lg">
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+          <button onClick={() => setIsOpen(true)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+            <Menu className="w-6 h-6 text-slate-700" />
           </button>
-          <h1 className="font-bold text-gray-800">متجري</h1>
+          <h1 className="font-extrabold text-slate-900 tracking-tight">VELOUR</h1>
         </div>
 
-        {/* يمكنك إضافة عناصر هنا تظهر في الـ Navbar مباشرة (مثل أيقونة الإشعارات أو الملف الشخصي) */}
-        <div className="flex items-center gap-4">
-          <button className="text-xl">🔔</button>
-          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
-            Admin
+        <div className="flex items-center gap-3">
+          {isAdmin && (
+             <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-full relative">
+                <Bell size={20} />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+             </button>
+          )}
+          <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${isAdmin ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'}`}>
+            {isAdmin ? "Admin Mode" : "Guest"}
           </div>
         </div>
       </header>
 
-      {/* --- الـ Drawer (القائمة الجانبية) --- */}
-      <div className={`fixed inset-y-0 left-0 z-[100] w-72 bg-white shadow-2xl transform 
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-        transition-transform duration-300 ease-in-out`}>
+      {/* --- الـ Drawer الجانبي --- */}
+      <div className={`fixed inset-y-0 right-0 z-[100] w-72 bg-white shadow-2xl transform 
+        ${isOpen ? "translate-x-0" : "translate-x-full"} 
+        transition-transform duration-300 ease-in-out`} dir="rtl">
         
-        <div className="p-6">
+        <div className="p-6 h-full flex flex-col">
           <div className="flex justify-between items-center mb-8 border-b pb-4">
-            <h2 className="text-xl font-bold text-blue-600 flex items-center gap-2">
-              <span>
-                
-               {/*عنوان Drawer*/}
-              
-              </span> 
-            </h2>
-            <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <h2 className="text-xl font-black text-primary">القائمة</h2>
+            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-red-500 transition-colors">
+              <X size={24} />
             </button>
           </div>
           
-          <nav className="space-y-2">
-            {menuItems.map((item, index) => (
+          <nav className="space-y-1 flex-1">
+            {/* عرض الروابط العامة */}
+            {publicItems.map((item, index) => (
               <Link 
                 key={index} 
                 href={item.path}
-                onClick={() => setIsOpen(false)} // يغلق القائمة عند الضغط على رابط
-                className="flex items-center gap-4 p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all font-medium"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-4 p-3 text-slate-700 hover:bg-slate-50 rounded-xl transition-all font-semibold"
               >
-                <span className="text-xl">{item.icon}</span>
+                <span className="text-primary">{item.icon}</span>
                 {item.name}
               </Link>
             ))}
+
+            {/* عرض روابط الأدمن فقط إذا كان isAdmin true */}
+            {isAdmin && (
+              <div className="pt-4 mt-4 border-t border-slate-100">
+                <p className="text-[10px] font-bold text-slate-400 mb-2 px-3 tracking-widest uppercase">لوحة التحكم</p>
+                {adminItems.map((item, index) => (
+                  <Link 
+                    key={index} 
+                    href={item.path}
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-4 p-3 text-slate-700 hover:bg-primary/5 hover:text-primary rounded-xl transition-all font-semibold"
+                  >
+                    <span>{item.icon}</span>
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            )}
           </nav>
 
-          {/* قسم إضافي في أسفل القائمة */}
-          <div className="absolute bottom-10 left-6 right-6">
-             <button className="w-full flex items-center gap-4 p-3 text-red-500 hover:bg-red-50 rounded-xl transition-all font-medium">
-                <span>🚪</span> تسجيل الخروج
-             </button>
-          </div>
+          {/* زر الخروج (يظهر للأدمن فقط) */}
+          {isAdmin && (
+            <div className="border-t pt-4">
+               <button className="w-full flex items-center gap-4 p-3 text-red-500 hover:bg-red-50 rounded-xl transition-all font-bold">
+                  <LogOut size={20} /> تسجيل الخروج
+               </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* الخلفية المظلمة */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/40 z-[90] backdrop-blur-[2px]" 
+          className="fixed inset-0 bg-slate-900/40 z-[90] backdrop-blur-[2px]" 
           onClick={() => setIsOpen(false)}
         />
       )}

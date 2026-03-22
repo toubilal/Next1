@@ -1,6 +1,7 @@
 'use server';
 import { Buffer } from "buffer";
 import { mkdir, writeFile, readFile } from 'fs/promises'; 
+import fs from 'fs';
 import path from 'path';export async function uploadImageAction(formData: FormData) {
   try {
     const file = formData.get('image') as File;
@@ -10,7 +11,7 @@ import path from 'path';export async function uploadImageAction(formData: FormDa
     const buffer = Buffer.from(bytes);
 
     // الحفظ في مجلد public ليكون متاحاً للمتصفح
-    const relativePath = `/uploads/${Date.now()}-${file.name}`;
+    const relativePath = formData.get('path') ;
     const fullPath = path.join(process.cwd(), 'public', relativePath);
 
     // التأكد من وجود المجلد
@@ -24,7 +25,9 @@ import path from 'path';export async function uploadImageAction(formData: FormDa
     return { success: false, message: "حدث خطأ أثناء الرفع" };
   }
 }
-
+/////////////////////////////////////
+/////////////////////////////////////
+/////////////////////////////////////
 export async function getProducts() {
   try {
     const filePath = path.join(process.cwd(), 'my-store-data', 'data.json');
@@ -45,8 +48,24 @@ export async function getProducts() {
     return []; 
   }
 }
+/////////////////////////////////////
+/////////////////////////////////////
+/////////////////////////////////////
+export async function deleteImageFile(imagePath: string) {
+  const cleanPath = imagePath.startsWith('/')
+    ? imagePath.slice(1)
+    : imagePath;
 
-// تغيير اسم الدالة كما طلبت
+  const fullPath = path.join(process.cwd(), 'public', cleanPath);
+console.log('PATH:', fullPath)
+  if (fs.existsSync(fullPath)) {
+    fs.unlinkSync(fullPath);
+  }
+}
+
+/////////////////////////////////////
+/////////////////////////////////////
+/////////////////////////////////////
 export async function createFolder1(name: string, price: string) {
   try {
     const folderPath = path.join(process.cwd(), 'my-store-data');
@@ -82,4 +101,28 @@ export async function createFolder1(name: string, price: string) {
   } catch (error) {
     return { success: false, message: "فشل في حفظ البيانات" };
   }
+}
+/////////////////////////////////////
+/////////////////////////////////////
+/////////////////////////////////////
+// جلب كل المنتجات
+export async function getProductsAction() {
+  const { data, error } = await supabaseAdmin
+    .from('Products')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) return { success: false, error: error.message };
+  return { success: true, data };
+}
+
+// تحديث سعر منتج
+export async function updateProductPriceAction(id: number, newPrice: number) {
+  const { error } = await supabaseAdmin
+    .from('Products')
+    .update({ Price: newPrice })
+    .eq('id', id);
+    
+  if (error) return { success: false, error: error.message };
+  return { success: true };
 }
