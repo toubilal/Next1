@@ -142,13 +142,14 @@ return (
     {/* الحاوية الكبرى */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-2 bg-slate-50">
       <AnimatePresence mode="popLayout">
-        {filteredProducts.map((item) => {
+        {filteredProducts.map((item,index) => {
   const isActive = selectedId === item.id;
 
   return (<ProductCard 
   product={item} 
   key={item.id}
   isAdmin={true} 
+  priority={index < 3}
   isActive={selectedId === item.id}
   setSelectedId={setSelectedId}
   handleDelete={handleDelete}

@@ -15,6 +15,7 @@ interface ProductCardProps {
   handleArchive?: (id: string, nextStatus: string) => void;
   isLiked?:boolean;
 likedProduct?:(id:string,isLiked:boolean)=> void;
+handleProductClick?:(product:[])=>void
 }
 
 export const ProductCard = ({
@@ -24,9 +25,11 @@ export const ProductCard = ({
   setSelectedId,
   setEditingProduct,
   setIsDrawerOpen,
-  handleArchive,isLiked=false,likedProduct
+  handleArchive,isLiked=false,likedProduct,priority,
+  handleProductClick
 }: ProductCardProps) => {
 const [isFavorite, setIsFavorite] = useState(isLiked);
+const [isImageLoaded, setIsImageLoaded] = useState(false);
   return (
   <motion.div
     layout
@@ -48,15 +51,21 @@ const [isFavorite, setIsFavorite] = useState(isLiked);
     </div>
 
     {/* 2. Media Area (Image) */}
-    <div className="relative aspect-square bg-slate-50">
-      <Image
-        src={product.Image}
-        fill
-        alt={product.Title}
-        className="object-cover"
-        unoptimized
-        onClick={() => !isAdmin && handleOpenDetails?.(product)} // الزائر يفتح التفاصيل بالضغط على الصورة
-      />
+    <div className={`relative w-full h-64 overflow-hidden ${!isImageLoaded ? 'animate-pulse bg-slate-200' : ''}`}
+       onClick={() => !isAdmin && handleProductClick(product)}
+    >
+  <Image
+    src={product.Image}
+    fill
+    alt={product.Title}
+    priority={priority} 
+    onLoadingComplete={() => setIsImageLoaded(true)}
+    // قمنا بحذف أي كود لـ rounded من هنا
+    className={`object-cover transition-opacity duration-300 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+    unoptimized
+ 
+  />
+
       
       {/* --- أزرار الأدمن: تظهر دائماً الآن لسهولة التحكم --- */}
       {isAdmin && (

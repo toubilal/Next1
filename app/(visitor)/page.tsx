@@ -4,9 +4,23 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion' 
 import { supabase } from '@/app/supabaseClient' 
 import {CategoryBar} from'@/components/store/CategoryBar'
+import { useProductStore } from '@/lib/store';
+import { useRouter } from 'next/navigation';
+
 export default function VisitorPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  const setSelectedProduct = useProductStore((state) => state.setSelectedProduct);
+const router = useRouter();
+
+const handleProductClick = (product: any) => {
+  // 1. احفظ المنتج في الذاكرة فوراً
+  setSelectedProduct(product);
+  
+  // 2. انتقل لصفحة التفاصيل
+  router.push(`/product/${product.id}`);};
+  
   const fetchProducts = async () => {
     try {
       setLoading(true)
@@ -82,25 +96,45 @@ useEffect(() => {
   useEffect(() => {
     fetchProducts()
   }, [])
-  
-  
-   if (loading)    return   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-2 bg-slate-50">
-  {Array.from({ length: 4 }).map((_, i) => (
-    <div
-      key={i}
-      className="relative flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden p-4 animate-pulse"
-    >
-      {/* الصورة */}
-      <div className="h-48 bg-gray-300 mb-4 rounded-xl"></div>
+  if (loading) return (
+  <main className="p-4 bg-slate-50 min-h-screen">
+    {/* العنوان ثابت ليطابق الصفحة الحقيقية */}
+    <h1 className="text-2xl font-bold text-right mb-6">متجرنا 🛍️</h1>
+    
+    {/* نستخدم نفس تقسيم الـ Grid تماماً (gap-5) ليطابق البطاقات الحقيقية */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="flex flex-col w-full bg-white border border-slate-200 overflow-hidden shadow-sm">
+          
+          {/* رأس البطاقة (Header) */}
+          <div className="flex items-center p-3">
+            <div className="w-8 h-8 rounded-full bg-slate-200"></div>
+            <div className="mr-3 h-3 bg-slate-200 rounded w-20"></div> {/* mr-3 لأن الاتجاه عربي */}
+          </div>
 
-      {/* العنوان */}
-      <div className="h-6 bg-gray-300 mb-2 rounded w-3/4"></div>
+          {/* مساحة الصورة المربعة (1:1) */}
+          <div className="w-full aspect-square bg-slate-200"></div>
 
-      {/* السعر */}
-      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+          {/* أيقونات التفاعل */}
+          <div className="flex gap-4 p-3 border-t border-slate-50">
+            <div className="w-5 h-5 bg-slate-100 rounded-full"></div>
+            <div className="w-5 h-5 bg-slate-100 rounded-full"></div>
+          </div>
+
+          {/* تفاصيل المنتج */}
+          <div className="p-3 space-y-3">
+            <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+            <div className="h-3 bg-slate-100 rounded w-1/4"></div>
+          </div>
+        </div>
+      ))}
     </div>
-  ))}
-</div>
+  </main>
+);
+
+  
+
+   
   
   
   return (
@@ -114,13 +148,15 @@ useEffect(() => {
     />
      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-2 bg-slate-50">
       <AnimatePresence mode="popLayout">
-           {filteredProducts.map((item) => (
+           {filteredProducts.map((item,index) => (
           <ProductCard 
             key={item.id} 
             product={item} 
             isAdmin={false}
+            priority={index < 3}
             isLiked={userLikedIds.includes(item.id)}
   likedProduct ={toggleLike}
+  handleProductClick={handleProductClick}
             
             // هنا السحر! الأزرار ستختفي تلقائياً
           />
