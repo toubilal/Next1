@@ -1,5 +1,7 @@
 "use client";
 import React,{useState} from 'react';
+import {CartContext} from '@/context/CartContext'
+import { useContext } from "react";
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {Eye, X, Edit3, Heart,Archive, ShoppingCart } from 'lucide-react';
@@ -12,6 +14,7 @@ interface ProductCardProps {
   handleDelete?: (id: string, title: string, img: string) => void;
   setEditingProduct?: (product: any) => void;
   setIsDrawerOpen?: (open: boolean) => void;
+  
   handleArchive?: (id: string, nextStatus: string) => void;
   isLiked?:boolean;
 likedProduct?:(id:string,isLiked:boolean)=> void;
@@ -24,10 +27,12 @@ export const ProductCard = ({
   isActive = false,
   setSelectedId,
   setEditingProduct,
+  handleDelete,
   setIsDrawerOpen,
   handleArchive,isLiked=false,likedProduct,priority,
   handleProductClick
 }: ProductCardProps) => {
+  const {addToCart, isOpenCart,openCart,cart, setCart,closeCart } = useContext(CartContext);
 const [isFavorite, setIsFavorite] = useState(isLiked);
 const [isImageLoaded, setIsImageLoaded] = useState(false);
   return (
@@ -52,7 +57,7 @@ const [isImageLoaded, setIsImageLoaded] = useState(false);
 
     {/* 2. Media Area (Image) */}
     <div className={`relative w-full h-64 overflow-hidden ${!isImageLoaded ? 'animate-pulse bg-slate-200' : ''}`}
-       onClick={() => !isAdmin && handleProductClick(product)}
+       onClick={() =>  handleProductClick(product)}
     >
   <Image
     src={product.Image}

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react' // أضفنا useEffect
 import { createFolder1,uploadImageAction, getProducts } from '@/app/actions'
+
 import toast, { Toaster } from 'react-hot-toast'
 
 export function Hh() {

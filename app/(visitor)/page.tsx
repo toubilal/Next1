@@ -1,6 +1,7 @@
 "use client";
 import { ProductCard } from '@/components/store/ProductCard';
 import { useEffect, useState } from 'react'
+import {handle_Like} from '@/app/supaBase'
 import { motion, AnimatePresence } from 'framer-motion' 
 import { supabase } from '@/app/supabaseClient' 
 import {CategoryBar} from'@/components/store/CategoryBar'
@@ -11,15 +12,16 @@ export default function VisitorPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   
-  const setSelectedProduct = useProductStore((state) => state.setSelectedProduct);
-const router = useRouter();
-
-const handleProductClick = (product: any) => {
-  // 1. احفظ المنتج في الذاكرة فوراً
-  setSelectedProduct(product);
   
-  // 2. انتقل لصفحة التفاصيل
-  router.push(`/product/${product.id}`);};
+
+
+  
+  
+  
+  
+const router = useRouter();
+const handleProductClick = (product: any) => {
+router.push(`/product/${product.id}`);};
   
   const fetchProducts = async () => {
     try {
@@ -57,13 +59,7 @@ const existingCategories = Array.from(
 
   try {
     // 1. تحديث Supabase
-    const { error } = await supabase
-  .rpc('handle_like', { 
-    row_id: Number(id), 
-    increment_by: isLiked ? -1 : 1 
-  });
-
-
+    const { error } = await handle_Like(id,isLiked);
     if (error) throw error;
 
     // 2. تحديث الواجهة (Optimistic Update)

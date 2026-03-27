@@ -26,7 +26,7 @@ export default function Home() {
       {/* شبكة المنتجات */}
       <ProductsPage />
       
-      <Hh /> 
+      
     </div>
   </div>
 );

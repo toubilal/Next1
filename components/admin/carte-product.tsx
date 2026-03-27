@@ -2,9 +2,11 @@
 import { useEffect, useState } from 'react'
 import { Plus,Edit3 ,X,Heart, ShoppingBag, Star } from "lucide-react"
 import {deleteImageFile} from '@/app/actions.ts'
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/app/supabaseClient' 
 import {ProductCard} from '@/components/store/ProductCard'
 import {Addproducts} from '@/components/admin/add-products'
+import {deleteProductAction} from '@/app/supaBase'
 import toast,{ Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion' 
 import Image from 'next/image'
@@ -18,6 +20,34 @@ export  function ProductsPage() {
 const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 const [editingProduct, setEditingProduct] = useState<any>(null); 
 
+const hideDrawer=(data:any)=>{setProducts((prev) => {
+  if (!data?.id) return prev;
+
+  const index = prev.findIndex(p => String(p.id) === String(data.id));
+
+  if (index !== -1) {
+    // حالة التحديث: دمج البيانات
+    const updatedProducts = [...prev];
+    
+    // نأخذ المنتج القديم كما هو، ونضع فوقه التعديلات الجديدة فقط
+    // هكذا نضمن أن العناصر التي لم نرسلها (مثل category) لا تضيع
+    updatedProducts[index] = { ...updatedProducts[index], ...data };
+    
+    return updatedProducts;
+  } else {
+    // حالة الإضافة: كما هي
+    return [data, ...prev];
+  }
+});
+
+setIsDrawerOpen(false);
+
+}
+
+
+const router = useRouter();
+const handleProductClick = (product: any) => {
+router.push(`/products/${product.id}`);};
 // دالة الحذف
 const handleDelete = async (id, title,Image) => {
   // نافذة التأكيد
@@ -25,16 +55,14 @@ const handleDelete = async (id, title,Image) => {
   
   if (confirmDelete) {
     try {
-      const { error } = await supabase
-        .from('Products')
-        .delete()
-        .eq('id', id); // الحذف بناءً على المعرف الفريد للمنتج
+      const { error } = await deleteProductAction(id);// الحذف بناءً على المعرف الفريد للمنتج
+  if (error) {throw error;} else{
   await deleteImageFile(Image)
-      if (error) throw error;
+  
 
       // تحديث الشاشة فوراً بفلترة المصفوفة وحذف المنتج منها
       setProducts(products.filter(product => product.id !== id));
-      toast.success("تم حذف المنتج بنجاح");
+      toast.success("تم حذف المنتج بنجاح");}
       
     } catch (error) {
       toast.error("فشل الحذف: " + error.message);
@@ -156,6 +184,7 @@ return (
   setEditingProduct={setEditingProduct}
   setIsDrawerOpen={setIsDrawerOpen}
   handleArchive={updateProductStatus}
+  handleProductClick={handleProductClick}
   
 />
 
@@ -211,7 +240,8 @@ return (
 
         {/* المكون الخاص بك للإضافة أصبح الآن داخل هذه النافذة */}
         <Addproducts 
-          initialData={editingProduct} // سنحتاجه غداً للتعديل
+          initialData={editingProduct} 
+          hideDrawer={hideDrawer}
           categories={existingCategories}
           onProductAdded={(newProd) => {
             addNewProductLocally(newProd);

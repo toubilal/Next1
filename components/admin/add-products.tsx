@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { motion } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import Cropper from 'react-easy-crop'
+import {addProductAction,updateProductAction} from'@/app/supaBase'
 import { Loader2, Plus, Image as ImageIcon, X, Edit3 } from "lucide-react"
 
 import { supabase } from '@/app/supabaseClient'
@@ -14,10 +15,11 @@ interface AddProductsProps {
   initialData?: any;
   onProductAdded: (product: any) => void;
   onProductUpdate?: (id: string, updatedData: any) => void;
-  categories: string[]; // أضف هذا السطر
+  categories: string[];
+  hideDrawer?:(newProduct:any)=>void// أضف هذا السطر
 }
 
-export function Addproducts({ initialData, onProductAdded, onProductUpdate, categories }: AddProductsProps){
+export function Addproducts({ initialData, onProductAdded, onProductUpdate, categories,hideDrawer }: AddProductsProps){
   
   useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -128,20 +130,13 @@ const handleCropSave = async () => {
       };
 
       if (isEditMode) {
-        const { data, error } = await supabase
-          .from('Products')
-          .update(productPayload)
-          .eq('id', initialData.id)
-          .select();
+        const { data, error } = await updateProductAction(initialData.id,productPayload);
 
-        if (error) throw error;
-        toast.success("تم تحديث المنتج بنجاح! ✏️");
-        if (onProductUpdate) onProductUpdate(initialData.id, data[0]);
-      } else {
-        const { data, error } = await supabase
-          .from('Products')
-          .insert([productPayload])
-          .select();
+        if (error) {throw error;
+      } else{ toast.success("تم تحديث المنتج بنجاح! ✏️");
+       hideDrawer(data[0]);}
+           } else {
+        const { data, error } = await addProductAction(productPayload);
 
         if (error) throw error;
         toast.success("تمت الإضافة بنجاح! 🎉");
