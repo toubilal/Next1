@@ -1,0 +1,16 @@
+[33m24acb955[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{0}: commit: chore: setup final gitignore
+[33m4d5aa7d4[m HEAD@{1}: reset: moving to origin/main
+[33m8cbfae3f[m HEAD@{2}: commit (amend): chore: cleanup gitignore and remove tracked env files
+[33m4714bee5[m HEAD@{3}: commit (amend): chore: cleanup gitignore and remove tracked env files
+[33m6ac8444d[m HEAD@{4}: commit: chore: cleanup gitignore and remove tracked env files
+[33m631eda6b[m HEAD@{5}: commit: fix: remove secret files and update gitignore
+[33m4e3c53ea[m HEAD@{6}: commit: fix: remove secrets and update gitignore
+[33m2b4151e5[m HEAD@{7}: commit: feat: complete admin actions and fix UI errors
+[33m4d5aa7d4[m HEAD@{8}: commit: تعديل واجهة السلة وإصلاح مشكلة الصور
+[33mc734bfaa[m HEAD@{9}: commit: fix refresh
+[33m0495e734[m HEAD@{10}: commit: Refactor: Instagram-style product card and admin folder structure
+[33m9cdc6f54[m HEAD@{11}: commit: تنظيف المستودع وتقليل الحجم
+[33mbc84f874[m HEAD@{12}: commit: تنظيف المشروع وتصغير الحجم للرفع
+[33m6c415171[m HEAD@{13}: commit: حذف مجلد node_modules من المستودع وتحديث التجاهل
+[33mfc11e47d[m HEAD@{14}: Branch: renamed refs/heads/master to refs/heads/main
+[33mfc11e47d[m HEAD@{16}: commit (initial): إضافة القائمة الجانبية والواجهة
