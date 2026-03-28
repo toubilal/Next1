@@ -36,17 +36,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handle_Like = exports.deleteProductAction = exports.updateProductAction = exports.addProductAction = exports.incrementViewAction = void 0;
+exports.handle_Like = exports.incrementViewAction = void 0;
+// في ملف @/app/supabaseClient (Client Side)
 var supabaseClient_1 = require("@/app/supabaseClient");
-// دالة موحدة لمعالجة الردود
-var handleResponse = function (error, data) {
-    if (error) {
-        console.error("Admin Action Error:", error.message);
-        return { success: false, message: error.message, code: error.code };
-    }
-    return { success: true, data: data };
-};
-// 1. زيادة المشاهدات
+// زيادة المشاهدة
 function incrementViewAction(productId) {
     return __awaiter(this, void 0, void 0, function () {
         var error;
@@ -63,70 +56,14 @@ function incrementViewAction(productId) {
     });
 }
 exports.incrementViewAction = incrementViewAction;
-// 2. إضافة منتج
-function addProductAction(payload) {
-    return __awaiter(this, void 0, void 0, function () {
-        var _a, data, error;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, supabaseClient_1.supabase
-                        .from('Products')
-                        .insert([payload])
-                        .select()];
-                case 1:
-                    _a = _b.sent(), data = _a.data, error = _a.error;
-                    return [2 /*return*/, { error: error, data: data }];
-            }
-        });
-    });
-}
-exports.addProductAction = addProductAction;
-// 3. تحديث الحالة
-// 3. تحديث منتج بالكامل (أو حقول معينة)
-function updateProductAction(id, payload) {
-    return __awaiter(this, void 0, void 0, function () {
-        var _a, data, error;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, supabaseClient_1.supabase
-                        .from('Products')
-                        .update(payload)
-                        .eq('id', id)
-                        .select()];
-                case 1:
-                    _a = _b.sent(), data = _a.data, error = _a.error;
-                    return [2 /*return*/, { error: error, data: data }];
-            }
-        });
-    });
-}
-exports.updateProductAction = updateProductAction;
-// 4. حذف منتج
-function deleteProductAction(id) {
-    return __awaiter(this, void 0, void 0, function () {
-        var error;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, supabaseClient_1.supabase
-                        .from('Products')
-                        .delete()
-                        .eq('id', id)];
-                case 1:
-                    error = (_a.sent()).error;
-                    return [2 /*return*/, { error: error }];
-            }
-        });
-    });
-}
-exports.deleteProductAction = deleteProductAction;
+// معالجة اللايك
 function handle_Like(id, isLiked) {
     return __awaiter(this, void 0, void 0, function () {
         var error;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, supabaseClient_1.supabase
-                        .rpc('handle_like', {
-                        row_id: Number(id),
+                case 0: return [4 /*yield*/, supabaseClient_1.supabase.rpc('handle_like', {
+                        row_id: id,
                         increment_by: isLiked ? -1 : 1
                     })];
                 case 1:

@@ -1,5 +1,5 @@
 "use client";
-import React,{ createContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useState, useEffect, ReactNode } from "react";
 
 interface CartContextType {
   cart: any[];
@@ -7,7 +7,7 @@ interface CartContextType {
   isOpenCart: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addToCart:()=> void;
+  addToCart: (product: any) => void; // أضفت البارامتر هنا
 }
 
 export const CartContext = createContext<CartContextType>({
@@ -15,38 +15,57 @@ export const CartContext = createContext<CartContextType>({
   setCart: () => {},
   isOpenCart: false,
   openCart: () => {},
-  closeCart: () => {},addToCart:()=>{},
+  closeCart: () => {},
+  addToCart: () => {},
 });
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<any[]>([]);
   const [isOpenCart, setIsOpenCart] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false); // لمنع مسح البيانات عند أول تحميل
 
+  // 1. تحميل البيانات عند البداية فقط
   useEffect(() => {
     const data = localStorage.getItem("cart");
-    setCart(data ? JSON.parse(data) : []);
+    if (data) {
+      try {
+        setCart(JSON.parse(data));
+      } catch (e) {
+        console.error("خطأ في قراءة بيانات السلة", e);
+      }
+    }
+    setIsInitialized(true); // نؤكد أننا انتهينا من التحميل الأولي
   }, []);
 
+  // 2. الحفظ في الـ Storage فقط بعد التأكد من انتهاء التحميل الأولي
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
+    if (isInitialized) {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+  }, [cart, isInitialized]);
 
-const addToCart = (product) => {
-    // تحقق إذا المنتج موجود بالفعل
-    const exists = cart.some((item) => item.id === product.id);
+  const addToCart = (product: any) => {
+    const exists = cart.find((item) => item.id === product.id);
 
     if (!exists) {
-      setCart([...cart, product]); // أضف المنتج
-      openCart(); // فتح السلة إذا أردت
+      // نضيف المنتج مع كمية افتراضية 1
+      setCart([...cart, { ...product, quantity: 1 }]);
+      openCart();
     } else {
-      alert("المنتج موجود بالفعل في السلة");
+      // إذا كان موجوداً، نزيد الكمية بدلاً من إظهار alert (أفضل لتجربة المستخدم)
+      const updated = cart.map(item => 
+        item.id === product.id ? { ...item, quantity: (item.quantity || 1) + 1 } : item
+      );
+      setCart(updated);
+      openCart();
     }
   };
+
   const openCart = () => setIsOpenCart(true);
   const closeCart = () => setIsOpenCart(false);
 
   return (
-    <CartContext.Provider value={{ cart, setCart, isOpenCart, addToCart,openCart, closeCart }}>
+    <CartContext.Provider value={{ cart, setCart, isOpenCart, addToCart, openCart, closeCart }}>
       {children}
     </CartContext.Provider>
   );

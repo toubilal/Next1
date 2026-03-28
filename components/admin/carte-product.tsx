@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/app/supabaseClient' 
 import {ProductCard} from '@/components/store/ProductCard'
 import {Addproducts} from '@/components/admin/add-products'
-import {deleteProductAction} from '@/app/supaBase'
+import {deleteProductAction,getAllProductsForAdmin} from '@/app/actions/adminActions'
 import toast,{ Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion' 
 import Image from 'next/image'
@@ -102,7 +102,7 @@ const addNewProductLocally = (newProduct) => {
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase.from('Products').select('*')
+      const { data, error } = await getAllProductsForAdmin();
 
      
       

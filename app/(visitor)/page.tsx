@@ -26,7 +26,7 @@ router.push(`/product/${product.id}`);};
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase.from('Products').select('*').eq('status', 'active')
+      const { data, error } = await supabase.rpc('get_public_products');
       if (error) throw error;
       setProducts(data)
     } catch (error) {

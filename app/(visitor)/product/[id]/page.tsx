@@ -4,8 +4,11 @@ import Link from 'next/link';
 import Image from "next/image";
 import { supabase } from "@/app/supabaseClient";
 import {incrementViewAction}  from '@/app/supaBase'
+import {CartContext} from '@/context/CartContext'
 
+import { useContext } from "react";
 export default function ProductDetailsView() {
+  const {addToCart, isOpenCart,openCart,cart, setCart,closeCart } = useContext(CartContext);
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,26 +55,40 @@ if (lastViewDate !== today) {
       });*/
 
       // جلب المنتج
-      const { data: mainProduct } = await supabase
-        .from("Products")
-        .select("*")
-        .eq("id", productId)
-        .single();
+      const { data ,error} = await supabase.rpc('get_product_by_id', { 
+  p_id: productId  // يجب أن يطابق الاسم p_id الموجود في الدالة أعلاه
+});
+let mainProduct = null; // استخدام let بدلاً من Var (للممارسات الأفضل)
 
-      if (mainProduct) {
-        setProduct(mainProduct);
+if (error) {
+    console.error("Error fetching product:", error.message);
+} else if (data && data.length > 0) {
+    // جلب المنتج الأول من المصفوفة
+    mainProduct = data[0];
+    console.log("Product Details:", mainProduct);
+    
+    // تحديث حالة المنتج الأساسي
+    setProduct(mainProduct);
 
-        const { data: similar } = await supabase
-          .from("Products")
-          .select("*")
-          .eq("category", mainProduct.category)
-          .neq("id", productId)
-          .limit(4);
+    // استدعاء المنتجات ذات الصلة
+    const { data: similar, error: relatedError } = await supabase.rpc('get_related_products', { 
+        p_category: mainProduct.category, 
+        p_exclude_id: productId,
+        p_limit: 4 
+    });
 
-        if (similar) setRelated(similar);
-      }
+    if (relatedError) {
+        console.error("Error fetching related products:", relatedError.message);
+    } else {
+        console.log("Related products found:", similar.length); // تم التصحيح هنا من data إلى similar
+        setRelated(similar);
+    }
+} else {
+    console.warn("No product found with this ID");
+}
 
-      setLoading(false);
+setLoading(false);
+
     };
 
     fetchProduct();
@@ -138,8 +155,10 @@ if (lastViewDate !== today) {
 
       {/* زر الطلب الثابت */}
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-white/80 backdrop-blur-md z-50">
-        <button className="w-full bg-black text-white py-4 font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-transform">
-          أكد الطلب الآن 🛍️
+        <button 
+        onClick={(e) => { e.stopPropagation(); addToCart?.(product); }}
+        className="w-full bg-black text-white py-4 font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-transform">
+            إلى السلة 🛍️
         </button>
       </div>
     </div>

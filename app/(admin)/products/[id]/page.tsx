@@ -5,7 +5,7 @@ import Image from "next/image";
 import { supabase } from "@/app/supabaseClient";
 import { motion, AnimatePresence } from 'framer-motion';
 import {Addproducts} from '@/components/admin/add-products'
-
+import {getFullCategoryProducts,getAdminProductById} from '@/app/actions/adminActions'
 // ملاحظة: تأكد من استيراد المكون Addproducts من مساره الصحيح
 // import Addproducts from "./Addproducts"; 
 
@@ -37,21 +37,12 @@ const hideDrawer = (newProduct:[]) => {
       }
 
       // 2. جلب المنتج
-      const { data: mainProduct } = await supabase
-        .from("Products")
-        .select("*")
-        .eq("id", productId)
-        .single();
-
+      const { data: mainProduct,error } = await getAdminProductById(productId);
+if (error) console.error(error)
       if (mainProduct) {
         setProduct(mainProduct);
         // جلب المنتجات ذات الصلة
-        const { data: similar } = await supabase
-          .from("Products")
-          .select("*")
-          .eq("category", mainProduct.category)
-          .neq("id", productId)
-          .limit(4);
+        const { data: similar } = await getFullCategoryProducts(mainProduct.category,productId)
         if (similar) setRelated(similar);
       }
 

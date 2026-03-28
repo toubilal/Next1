@@ -63,7 +63,7 @@ const { isOpenCart,openCart,cart, setCart,closeCart } = useContext(CartContext);
              className="p-2 text-slate-600 hover:bg-slate-100 rounded-full relative">
   <ShoppingCart size={20} />
   <span className="absolute top-0 right-0 min-w-[16px] h-4 px-1 text-[10px] flex items-center justify-center bg-red-500 text-white rounded-full border-2 border-white">
-    2
+   { cart.length}
   </span>
 </button> 
           )}

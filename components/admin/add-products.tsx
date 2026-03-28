@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { motion } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import Cropper from 'react-easy-crop'
-import {addProductAction,updateProductAction} from'@/app/supaBase'
+import {addProductAction,updateProductAction} from'@/app/actions/adminActions'
 import { Loader2, Plus, Image as ImageIcon, X, Edit3 } from "lucide-react"
 
 import { supabase } from '@/app/supabaseClient'
