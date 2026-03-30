@@ -45,7 +45,7 @@ if (lastViewDate !== today) {
     if (!error) {
         // نحدث القفل ونربطه بتاريخ اليوم
         localStorage.setItem(storageKey, today);
-    }
+    }else{console.error(error.message)}
 }
 
       

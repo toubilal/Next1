@@ -6,6 +6,93 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY! // هذا سيقرأ القيمة 'sb_secret_...' من ملفك
 )
+//جالة جلب الطلبات
+export async function getRecentOrders() {
+  const { data, error } = await supabaseAdmin
+    .from('orders') 
+    .select(`
+      id,
+      status,
+      created_at,
+      product_id,
+      sys_data_node_77 ( Title, Image ) 
+    `) // جلب بيانات المنتج المرتبط بالطلب
+    .order('created_at', { ascending: false });
+
+  return { data, error };
+}
+
+
+
+
+
+//دالة جلب الاحصائيات العامة
+export async function Stats() {
+  const { data, error } = await supabaseAdmin
+    .from('sys_data_node_77')
+    .select('id, Title, Image, views, orders, likes_count')
+    .order('views', { ascending: false });
+
+  if (data) {
+    // هنا نقوم بإنشاء خاصية conversion يدوياً لكل منتج
+    const dataWithConversion = data.map(item => ({
+      ...item,
+      conversion: item.views > 0 
+        ? ((item.orders || 0) / item.views * 100).toFixed(1) 
+        : "0.0"
+    }));
+    return { data: dataWithConversion, error };
+  }
+
+  return { data, error };
+}
+/////دالة جلب مشاهدة الاسبوع الاخير
+export async function getWeeklyStats() {
+  try {
+    // 1. تحديد تاريخ البداية (قبل 7 أيام من الآن)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const startDate = sevenDaysAgo.toISOString();
+
+    // 2. جلب المشاهدات من جدول product_views
+    const { data, error } = await supabaseAdmin
+      .from('product_views')
+      .select('created_at')
+      .gte('created_at', startDate)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    // 3. تجهيز قائمة بآخر 7 أيام (لضمان ظهور الأيام التي لا توجد بها مشاهدات كـ 0)
+    const last7Days: Record<string, number> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateKey = d.toISOString().split('T')[0];
+      last7Days[dateKey] = 0;
+    }
+
+    // 4. ملء البيانات الحقيقية في القائمة
+    data?.forEach((view: any) => {
+      const dateKey = view.created_at.split('T')[0];
+      if (last7Days[dateKey] !== undefined) {
+        last7Days[dateKey]++;
+      }
+    });
+
+    // 5. تحويلها لتنسيق يسهل على Recharts قراءته
+    const chartData = Object.entries(last7Days).map(([date, count]) => ({
+      // تنسيق التاريخ ليظهر "30/03" بدلاً من "2026-03-30"
+      day: date.split('-').reverse().slice(0, 2).join('/'),
+      views: count,
+    }));
+
+    return { data: chartData, error: null };
+  } catch (error: any) {
+    console.error("Error in getWeeklyStats:", error);
+    return { data: [], error: error.message };
+  }
+}
 
 
 // 1. إضافة منتج (Server Action)

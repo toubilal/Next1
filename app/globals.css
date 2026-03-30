@@ -45,3 +45,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* أنيميشن الاهتزاز الأفقي */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+/* أنيميشن نبض الظل (باللون الأحمر للتنبيه) */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* الكلاس الذي سيتم تفعيله برمجياً */
+.is-duplicate {
+  animation: shake 0.4s ease-in-out, pulseGlow 0.7s ease-in-out;
+  border: 2px solid #ef4444 !important; /* لون أحمر */
+  background-color: #fee2e2 !important; /* خلفية حمراء باهتة */
+}
