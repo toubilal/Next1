@@ -13,15 +13,28 @@ export async function getRecentOrders() {
     .select(`
       id,
       status,
+      order_id,
       created_at,
       product_id,
-      sys_data_node_77 ( Title, Image ) 
+      customer_name,
+      customer_phone,
+      customer_address,
+      product:sys_data_node_77 ( Title, Image ) 
     `) // جلب بيانات المنتج المرتبط بالطلب
     .order('created_at', { ascending: false });
 
   return { data, error };
 }
 
+// في ملف adminActions.js
+export async function updateOrderStatus(orderId, newStatus) {
+  const { data, error } = await supabaseAdmin
+    .from('orders')
+    .update({ status: newStatus })
+    .eq('order_id', orderId); // التحديث لكل المنتجات التي لها نفس order_id
+    
+  return { data, error };
+}
 
 
 

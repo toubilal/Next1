@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CartContext } from "@/context/CartContext";
-
+import Link from "next/link";
 export function Cart() {
   const { isOpenCart, closeCart, cart, setCart } = useContext(CartContext);
 
@@ -111,10 +111,21 @@ export function Cart() {
                 <span className="text-green-700 font-black text-lg">
                    {cart.reduce((total, item) => total + (Number(item.Price) * (item.quantity || 1)), 0)} <span className="text-xs">د.ج</span>
                 </span>
-              </div>
-              <button className="w-full bg-black text-white py-3.5 rounded-xl text-sm font-black active:scale-95 transition-all">
-                إتمام الطلب
-              </button>
+              </div><Link
+  href={cart?.length > 0 ? "/checkout" : "#"}
+  className={`block w-full py-3.5 rounded-xl text-sm font-black text-center transition-all
+    ${
+      cart?.length > 0
+        ? "bg-black text-white active:scale-95"
+        : "bg-gray-400 text-gray-200 cursor-not-allowed"
+    }`}
+  onClick={(e) => {
+    if (cart?.length === 0) e.preventDefault();
+  }}
+>
+  إتمام الطلب
+</Link>
+              
             </div>
           </motion.div>
         </>
