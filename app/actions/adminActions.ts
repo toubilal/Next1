@@ -6,6 +6,42 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY! // هذا سيقرأ القيمة 'sb_secret_...' من ملفك
 )
+//تعديل كمية الطلب
+export async function update_quantity_rpc(Id, newQuantity) {
+  // Supabase سيقوم بتحويل الـ String إلى UUID تلقائياً عند تمريره للدالة
+  const { error } = await supabaseAdmin.rpc('update_order_quantity', {
+    row_id: Id, 
+    new_qty: newQuantity
+  });
+
+  if (error) {
+    console.error("RPC Error:", error.message);
+    return { error  };
+  }
+
+  return { success: true };
+}
+
+
+
+// في ملف الأكشن (Server Side)
+export async function handleConfirmOrder(orderId: string,  newStat: string,itemsToUpdate?:any) {
+  const { error } = await supabaseAdmin.rpc('update_order_final', {
+  order_id_input: orderId,
+  status_input: newStat,
+  items_input:itemsToUpdate
+ 
+});
+
+  // يجب إضافة هذا السطر لكي تصل النتيجة للصفحة
+  if (error) return { error: error.message };
+  
+  return { success: true };
+  
+}
+
+
+
 //جالة جلب الطلبات
 export async function getRecentOrders() {
   const { data, error } = await supabaseAdmin
@@ -16,25 +52,19 @@ export async function getRecentOrders() {
       order_id,
       created_at,
       product_id,
+      quantity, 
       customer_name,
       customer_phone,
       customer_address,
       product:sys_data_node_77 ( Title, Image ) 
-    `) // جلب بيانات المنتج المرتبط بالطلب
+    `)
     .order('created_at', { ascending: false });
+
 
   return { data, error };
 }
 
 // في ملف adminActions.js
-export async function updateOrderStatus(orderId, newStatus) {
-  const { data, error } = await supabaseAdmin
-    .from('orders')
-    .update({ status: newStatus })
-    .eq('order_id', orderId); // التحديث لكل المنتجات التي لها نفس order_id
-    
-  return { data, error };
-}
 
 
 
