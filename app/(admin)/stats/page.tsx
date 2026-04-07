@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { Stats, getRecentOrders, getWeeklyStats,update_quantity_rpc ,handleConfirmOrder} from '@/app/actions/adminActions'; // تأكد من استيراد دالة التحديث
-import { Eye,Trash2, ShoppingCart, RefreshCw } from 'lucide-react';
+import {Check, X, DollarSign,Loader2,Eye,Trash2, ShoppingCart, RefreshCw,RefreshCcw } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Link from 'next/link';
 
@@ -63,31 +63,50 @@ export default function StatsPage() {
     }
   }
   
-  
+  // الحالة الآن ستخزن كائن يحتوي على الـ ID ونوع العملية
+const [loadingProcess, setLoadingProcess] = useState({ id: null, type: null });
+
+const handleClick = async (orderId, newStat, items = null) => {
+  if (loadingProcess.id === orderId) return;
+
+  // تخزين المعرف ونوع العملية (مثلاً: 'confirm' أو 'cancel')
+  setLoadingProcess({ id: orderId, type: newStat });
+
+  try {
+    await handleUpdateStatus(orderId, newStat, items);
+  } finally {
+    // إعادة الحالة للوضع الافتراضي
+    setLoadingProcess({ id: null, type: null });
+  }
+};
+
+
+
   
 
   // دالة تحديث الكمية (تعمل الآن على allGroupedOrders)
   const updateItemQuantity = async (orderId, productId, delta) => {
   // فحص فوري: إذا كان الـ Id مفقوداً، توقف واطبع تنبيهاً
-  
+ // console.error(orderId+'   '+productId+'   '+delta)
 
   let newQty = 0;
 
   // تحديث محلي
   setAllGroupedOrders(prev => prev.map(group => {
-    if (group.order_id === orderId) {
-      return {
-        ...group,
-        items: group.items.map(item => {
-            newQty = Math.max(1, (item.quantity || 1) + delta);
-            return { ...item, quantity: newQty };
-          
-          return item;
-        })
-      };
-    }
-    return group;
-  }));
+  if (group.order_id === orderId) {
+    return {
+      ...group,
+      items: group.items.map(item => {
+        if (item.product_id === productId) {
+          const newQty = Math.max(1, (item.quantity || 1) + delta);
+          return { ...item, quantity: newQty };
+        }
+        return item; // ❗ لا تغيّر هذا
+      })
+    };
+  }
+  return group;
+}));
 
 
 };
@@ -109,18 +128,23 @@ export default function StatsPage() {
     setAllGroupedOrders(prev => prev.filter(g => g.order_id !== orderId));
   };
 
-  async function handleUpdateStatus(orderId, newStat,items?:any) {
-   
-   let itemsToUpdate=[];
-   if(items){ itemsToUpdate = items.map(item => ({
-  id: item.id,
-  quantity: item.quantity
-}));}
+  async function handleUpdateStatus(orderId, newStat, items) {
+  let itemsToUpdate = [];
 
-    const  {res,error}= await handleConfirmOrder(orderId, newStat,itemsToUpdate);
-    if (error) {console.error(error)
-   } else{fetchStats(); }
+  if (items) {
+    itemsToUpdate = items.map(item => ({
+      id: item.id,
+      quantity: item.quantity
+    }));
   }
+
+  const result = await handleConfirmOrder(orderId, newStat, itemsToUpdate);
+
+  if (result.error) {
+    throw new Error(result.error);
+  }
+
+  await fetchStats();}
 
   useEffect(() => { fetchStats(); }, []);
 
@@ -302,52 +326,77 @@ export default function StatsPage() {
 
               {/* التحكم */}
               <div className="flex justify-end gap-2"> {group.status === 'pending' && (
+  <button
+    onClick={() => handleClick(group.order_id, 'confirmed', group.items)}
+    className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs disabled:opacity-50"
+    disabled={loadingProcess.id === group.order_id} // يتجمد إذا كان هناك أي عملية لهذا الطلب
+  >
+    {/* يظهر التحميل فقط إذا كان الـ type هو 'confirmed' */}
+    {loadingProcess.id === group.order_id && loadingProcess.type === 'confirmed' ? (
+      <Loader2 className="w-3 h-3 animate-spin" />
+    ) : <Check className="w-3 h-3" />}
+    تأكيد
+  </button>
+)}
+
+{/* زر تم القبض */}
+{group.status === 'confirmed' && (
+  <button
+    onClick={() => handleClick(group.order_id, 'completed', group.items)}
+    className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs disabled:opacity-50"
+    disabled={loadingProcess.id === group.order_id} // يتجمد إذا كان هناك أي عملية لهذا الطلب
+  >
+    {/* يظهر التحميل فقط إذا كان الـ type هو 'confirmed' */}
+    {loadingProcess.id === group.order_id && loadingProcess.type === 'completed' ? (
+      <Loader2 className="w-3 h-3 animate-spin" />
+    ) : <Check className="w-3 h-3" />}
+    تأكيد
+  </button>
+)}
+
+{group.status !== 'canceled' && (
+  <button
+    onClick={() => handleClick(group.order_id, 'canceled')}
+    className="flex items-center gap-1 bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs disabled:opacity-50"
+    disabled={loadingProcess.id === group.order_id} // يتجمد عند الضغط على تأكيد أيضاً
+  >
+    {/* يظهر التحميل فقط إذا كان الـ type هو 'canceled' */}
+    {loadingProcess.id === group.order_id && loadingProcess.type === 'canceled' ? (
+      <Loader2 className="w-3 h-3 animate-spin" />
+    ) : <X className="w-3 h-3" />}
+    إلغاء
+  </button>
+)}
+
+{/* في حالة ملغاة */}
+{group.status === 'canceled' && (
+  <div className="flex gap-2">
+    {/* زر حذف نهائي - يتجمد فقط عند التحميل */}
     <button
-      onClick={() => handleUpdateStatus(group.order_id, 'confirmed',group.items)}
-      className="bg-blue-500 text-white px-3 py-1 rounded-lg text-xs"
+      onClick={() => deleteOrder(group.order_id)}
+      className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-lg text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+      disabled={loadingProcess.id === group.order_id} 
     >
-      تأكيد
+      <Trash2 className="w-3 h-3" />
+      حذف نهائي
     </button>
-  )}
 
-  {/* إكمال الطلب (مقبوضة) */}
-  {group.status === 'confirmed' && (
+    {/* زر إعادة المعالجة - يظهر التحميل ويتجمد */}
     <button
-      onClick={() => handleUpdateStatus(group.order_id, 'completed')}
-      className="bg-emerald-600 text-white px-3 py-1 rounded-lg text-xs"
+      onClick={() => handleClick(group.order_id, 'pending', group.items)}
+      className="flex items-center gap-1 bg-yellow-600 text-white px-3 py-1.5 rounded-lg text-xs transition-all disabled:opacity-50"
+      disabled={loadingProcess.id === group.order_id}
     >
-      تم القبض
+      {loadingProcess.id === group.order_id && loadingProcess.type === 'pending' ? (
+        <Loader2 className="w-3 h-3 animate-spin" />
+      ) : (
+        <RefreshCcw className="w-3 h-3" />
+      )}
+      إعادة المعالجة
     </button>
-  )}
+  </div>
+)}
 
-  {/* زر الإلغاء موجود دائمًا إلا إذا كانت ملغاة */}
-  {group.status !== 'canceled' && (
-    <button
-      onClick={() => handleUpdateStatus(group.order_id, 'canceled')}
-      className="bg-red-500 text-white px-3 py-1 rounded-lg text-xs"
-    >
-      إلغاء
-    </button>
-  )}
-
-  {/* في حالة ملغاة */}
-  {group.status === 'canceled' && (
-    <>
-      <button
-        onClick={() => deleteOrder(group.order_id)}
-        className="bg-black text-white px-3 py-1 rounded-lg text-xs"
-      >
-        حذف نهائي
-      </button>
-
-      <button
-        onClick={() => handleUpdateStatus(group.order_id, 'pending')}
-        className="bg-yellow-500 text-white px-3 py-1 rounded-lg text-xs"
-      >
-        إعادة المعالجة
-      </button>
-    </>
-  )}
               </div>
             </div>
           ))}
