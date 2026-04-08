@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { useNotifications } from "@/context/NotificationContext";
 import { Stats, getRecentOrders, getWeeklyStats,update_quantity_rpc ,handleConfirmOrder} from '@/app/actions/adminActions'; // تأكد من استيراد دالة التحديث
 import {Check, X, DollarSign,Loader2,Eye,Trash2, ShoppingCart, RefreshCw,RefreshCcw } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -9,6 +10,11 @@ export default function StatsPage() {
     const [activeTab, setActiveTab] = useState('pending');
   const [weeklyData, setWeeklyData] = useState([]);
   const [stats, setStats] = useState([]);
+
+  const { notifications } = useNotifications();
+
+  
+  
   // هذا هو المتغير الأهم الذي سيحتوي على كل الطلبات مجمعة
   const [allGroupedOrders, setAllGroupedOrders] = useState([]); 
   const [loading, setLoading] = useState(true);

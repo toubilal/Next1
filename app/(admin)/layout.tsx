@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
 import "@/app/globals.css";
-import { Drawer } from "@/components/store/drawer"
+import { AdminDrawer } from "@/components/admin/Drawer"
 import React from 'react'
-
+import { NotificationProvider } from "@/context/NotificationContext";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -25,15 +25,17 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
+    <NotificationProvider>
     <div >
       
       {/* Drawer يظهر في كل صفحات admin */}
-      <Drawer isAdmin={true} />
+      <AdminDrawer  />
 
       <main className="p-4">
         {children}
       </main>
       
     </div>
+    </NotificationProvider>
   );
 }
