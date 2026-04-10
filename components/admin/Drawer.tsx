@@ -8,7 +8,7 @@ export function AdminDrawer() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   
-  const { orders, unreadCount, markAsRead } = useNotifications();
+  const { orders, unreadCount,  } = useNotifications();
 
   // منطق العرض: نعرض 4 سلات على الأقل، أو كل السلات الجديدة إذا كانت أكثر من 4
   const displayLimit = Math.max(4, unreadCount);
@@ -33,7 +33,7 @@ export function AdminDrawer() {
         <div className="flex items-center gap-4">
           {/* زر الإشعارات مع العداد اللحظي */}
           <button 
-            onClick={() => { setIsNotifOpen(true); markAsRead(); }} 
+            onClick={() => { setIsNotifOpen(true);  }} 
             className="p-2 text-slate-600 hover:bg-slate-100 rounded-full relative transition-transform active:scale-90"
           >
             <Bell size={22} />
@@ -81,69 +81,93 @@ export function AdminDrawer() {
                <ShoppingBag size={20} className="text-blue-600" />
                <h2 className="text-lg font-bold text-slate-800">آخر السلات</h2>
             </div>
-            <button onClick={() => setIsNotifOpen(false)} className="p-1 hover:bg-slate-200 rounded-lg"><X size={20} /></button>
+            <button onClick={() => {setIsNotifOpen(false);
+            markAsRead();
+            }
+            } className="p-1 hover:bg-slate-200 rounded-lg"><X size={20} /></button>
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
             {displayedOrders.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 text-slate-400 opacity-50">
+              <div key={0} className="flex flex-col items-center justify-center h-40 text-slate-400 opacity-50">
                 <ShoppingBag size={40} className="mb-2" />
                 <p className="text-sm">لا توجد طلبات بعد</p>
               </div>
             ) : (
-              displayedOrders.map((order: any, index: number) => {
-                const isNew = index < unreadCount; // الطلبات الجديدة هي التي ترتيبها ضمن عداد غير المقروء
-                return (
-           
-<div className="flex-1 overflow-y-auto space-y-4 px-2 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto space-y-4 px-2 custom-scrollbar">
   {orders.length === 0 ? (
     <div className="flex flex-col items-center justify-center h-40 text-slate-400">
       <p className="text-sm">لا توجد طلبات معلقة حالياً</p>
     </div>
   ) : (
-    orders.map((order: any, index: number) => {
-      const isNew = index < unreadCount;
+    orders.map((order, index) => {
+  const hasUnread = order?.items?.some((item: any) => !item.is_seen) || false;
+
+  // تأكد أيضاً من الوصول الآمن للطلب السابق
+  const previousOrderHasUnread = 
+    index > 0 && 
+    (orders[index - 1]?.items?.some((item: any) => !item.is_seen) || false);
+
       return (
         <div 
           key={order.order_id} 
           className={`p-4 rounded-2xl border transition-all duration-300 ${
-            isNew ? "bg-blue-50 border-blue-200 shadow-md" : "bg-white border-slate-100"
+            hasUnread 
+              ? "bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-100" 
+              : "bg-white border-slate-100"
           }`}
         >
+           {!hasUnread && previousOrderHasUnread && (
+        <div className="py-2 text-[10px] text-slate-400 font-bold text-center uppercase tracking-widest">
+          الطلبات السابقة
+        </div>
+      )}
           {/* رأس البطاقة: اسم العميل والوقت */}
           <div className="flex justify-between items-start mb-3">
             <div className="text-right">
-              <h3 className="font-black text-slate-800 text-sm">{order.customer_name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-black text-slate-800 text-sm">{order.customer_name}</h3>
+                {/* علامة مميزة (نقطة زرقاء) للطلب الجديد */}
+                {hasUnread && <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>}
+              </div>
               <p className="text-[10px] text-slate-500">{order.customer_phone}</p>
             </div>
-            <span className={`text-[9px] px-2 py-1 rounded-lg ${isNew ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"}`}>
+            <span className={`text-[9px] px-2 py-1 rounded-lg font-bold ${
+              hasUnread ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"
+            }`}>
               {new Date(order.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
 
           {/* قائمة المنتجات داخل هذه السلة */}
           <div className="space-y-2 border-t border-dashed border-slate-200 pt-3">
-            {order.items.map((item: any) => (
-              <div key={item.id} className="flex items-center gap-3 bg-white/50 p-2 rounded-xl border border-slate-50">
-                {/* صورة المنتج إن وجدت */}
-                <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
+            {order.items.map((item: any, idx: number) => (
+              <div key={idx} className={`flex items-center gap-3 p-2 rounded-xl border ${
+                item.is_seen ? "bg-white/50 border-slate-50" : "bg-white border-blue-100"
+              }`}>
+                {/* صورة المنتج */}
+                <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100">
                   {item.product?.Image ? (
                     <img src={item.product.Image} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-300">N/A</div>
+                    <div className="w-full h-full flex items-center justify-center text-[8px] text-slate-300 uppercase">N/A</div>
                   )}
                 </div>
                 {/* تفاصيل المنتج */}
                 <div className="flex-1 text-right">
-                  <p className="text-[11px] font-bold text-slate-700 line-clamp-1">{item.product?.Title || "منتج غير معروف"}</p>
-                  <p className="text-[10px] text-primary font-medium">الكمية: {item.quantity}</p>
+                  <p className="text-[11px] font-bold text-slate-700 line-clamp-1">
+                    {item.product?.Title || "منتج غير معروف"}
+                  </p>
+                  <p className="text-[10px] text-blue-600 font-medium">الكمية: {item.quantity}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* عنوان التوصيل */}
-          <div className="mt-3 flex items-center gap-1 text-[10px] text-slate-400 bg-slate-50 p-2 rounded-lg">
+          <div className={`mt-3 flex items-center gap-1 text-[10px] p-2 rounded-lg ${
+            hasUnread ? "bg-blue-100/50 text-blue-700" : "bg-slate-50 text-slate-400"
+          }`}>
              <span className="font-bold text-slate-600">العنوان:</span>
              <span className="truncate">{order.customer_address}</span>
           </div>
@@ -152,8 +176,7 @@ export function AdminDrawer() {
     })
   )}
 </div>
- );
-              })
+
             )}
           </div>
 

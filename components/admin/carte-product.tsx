@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Plus,Edit3 ,X,Heart, ShoppingBag, Star } from "lucide-react"
 import {deleteImageFile} from '@/app/actions.ts'
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/app/supabaseClient' 
+import { updateProductStatus } from '@/app/actions/adminActions' 
 import {ProductCard} from '@/components/store/ProductCard'
 import {Addproducts} from '@/components/admin/add-products'
 import {deleteProductAction,getAllProductsForAdmin} from '@/app/actions/adminActions'
@@ -70,29 +70,23 @@ const handleDelete = async (id, title,Image) => {
   }
 };
 
-const updateProductStatus = async (id, nextStatus) => {
-  // newStatus يمكن أن تكون: 'active' أو 'archived' أو 'trash'
-  
-  try {
-    const { error } = await supabase
-      .from('Products')
-      .update({ status: nextStatus }) 
-      .eq('id', id);
+const handleUpdateStatus = async (id, nextStatus) => {
+  const res = await updateProductStatus(id, nextStatus);
 
-    if (error) throw error;
+  if (res.success) {
+    alert(res.message);
+    // تحديث الواجهة
+    setProducts(prev =>
+      prev.map(p =>
+        p.id === id ? { ...p, status: nextStatus } : p
+      )
+    );
 
-    // تحديث الواجهة فوراً ليختفي المنتج من القائمة الحالية
-    setProducts(prev => prev.map(p => 
-  p.id === id ? { ...p, status: nextStatus } : p
-));
-
-    
-    console.log(`تم نقل المنتج إلى: ${nextStatus}`);
-  } catch (err) {
-    alert("حدث خطأ في تحديث الحالة");
+    console.log(res.message); // أو toast
+  } else {
+    alert(res.message);
   }
 };
-
 
 const addNewProductLocally = (newProduct) => {
   setProducts((prevProducts) => [newProduct, ...prevProducts]);
@@ -183,7 +177,7 @@ return (
   handleDelete={handleDelete}
   setEditingProduct={setEditingProduct}
   setIsDrawerOpen={setIsDrawerOpen}
-  handleArchive={updateProductStatus}
+  handleArchive={handleUpdateStatus}
   handleProductClick={handleProductClick}
   
 />

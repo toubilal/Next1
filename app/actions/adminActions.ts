@@ -231,3 +231,23 @@ export async function getAdminProductById(id: number) {
 
   return { success: true, data };
 }
+
+//تحديث حالة المنتج
+
+export async function updateProductStatus(id, nextStatus) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('sys_data_node_77')
+      .update({ status: nextStatus })
+      .eq('id', id);
+
+    if (error) {
+      return { success: false, message: error.message };
+    }
+
+    return { success: true, message: "تم التحديث بنجاح" };
+
+  } catch (err) {
+    return { success: false, message: "خطأ في السيرفر" };
+  }
+}
