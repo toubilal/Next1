@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useNotifications } from "@/context/NotificationContext";
-import { Stats, getRecentOrders, getWeeklyStats,update_quantity_rpc ,handleConfirmOrder} from '@/app/actions/adminActions'; // تأكد من استيراد دالة التحديث
+import { Stats, getRecentOrders, getWeeklyStats,update_quantity_rpc ,handleConfirmOrder,deleteOrder} from '@/app/actions/adminActions'; // تأكد من استيراد دالة التحديث
 import {Check, X, DollarSign,Loader2,Eye,Trash2, ShoppingCart, RefreshCw,RefreshCcw } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Link from 'next/link';
@@ -130,7 +130,10 @@ const handleClick = async (orderId, newStat, items = null) => {
   };
 
   // دالة الحذف النهائي للطلب
-  const deleteOrder = (orderId) => {
+  const  handledeleteOrder =async (orderId) => {
+    const res =await deleteOrder(orderId);
+    if(res.error){throw new Error(res.error); }
+    
     setAllGroupedOrders(prev => prev.filter(g => g.order_id !== orderId));
   };
 
@@ -335,7 +338,7 @@ const handleClick = async (orderId, newStat, items = null) => {
   <button
     onClick={() => handleClick(group.order_id, 'confirmed', group.items)}
     className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs disabled:opacity-50"
-    disabled={loadingProcess.id === group.order_id} // يتجمد إذا كان هناك أي عملية لهذا الطلب
+    disabled={loadingProcess.id} // يتجمد إذا كان هناك أي عملية لهذا الطلب
   >
     {/* يظهر التحميل فقط إذا كان الـ type هو 'confirmed' */}
     {loadingProcess.id === group.order_id && loadingProcess.type === 'confirmed' ? (
@@ -350,7 +353,7 @@ const handleClick = async (orderId, newStat, items = null) => {
   <button
     onClick={() => handleClick(group.order_id, 'completed', group.items)}
     className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs disabled:opacity-50"
-    disabled={loadingProcess.id === group.order_id} // يتجمد إذا كان هناك أي عملية لهذا الطلب
+    disabled={loadingProcess.id }// يتجمد إذا كان هناك أي عملية لهذا الطلب
   >
     {/* يظهر التحميل فقط إذا كان الـ type هو 'confirmed' */}
     {loadingProcess.id === group.order_id && loadingProcess.type === 'completed' ? (
@@ -364,7 +367,7 @@ const handleClick = async (orderId, newStat, items = null) => {
   <button
     onClick={() => handleClick(group.order_id, 'canceled')}
     className="flex items-center gap-1 bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs disabled:opacity-50"
-    disabled={loadingProcess.id === group.order_id} // يتجمد عند الضغط على تأكيد أيضاً
+    disabled={loadingProcess.id }// يتجمد عند الضغط على تأكيد أيضاً
   >
     {/* يظهر التحميل فقط إذا كان الـ type هو 'canceled' */}
     {loadingProcess.id === group.order_id && loadingProcess.type === 'canceled' ? (
@@ -379,9 +382,9 @@ const handleClick = async (orderId, newStat, items = null) => {
   <div className="flex gap-2">
     {/* زر حذف نهائي - يتجمد فقط عند التحميل */}
     <button
-      onClick={() => deleteOrder(group.order_id)}
+      onClick={() => handledeleteOrder(group.order_id)}
       className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-lg text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-      disabled={loadingProcess.id === group.order_id} 
+      disabled={loadingProcess.id }
     >
       <Trash2 className="w-3 h-3" />
       حذف نهائي
@@ -391,7 +394,7 @@ const handleClick = async (orderId, newStat, items = null) => {
     <button
       onClick={() => handleClick(group.order_id, 'pending', group.items)}
       className="flex items-center gap-1 bg-yellow-600 text-white px-3 py-1.5 rounded-lg text-xs transition-all disabled:opacity-50"
-      disabled={loadingProcess.id === group.order_id}
+      disabled={loadingProcess.id}
     >
       {loadingProcess.id === group.order_id && loadingProcess.type === 'pending' ? (
         <Loader2 className="w-3 h-3 animate-spin" />

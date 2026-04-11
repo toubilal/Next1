@@ -1,10 +1,18 @@
 "use client";
 import Image from 'next/image';
-import { useContext } from "react";
+import { useContext,useState  } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CartContext } from "@/context/CartContext";
 import Link from "next/link";
 export function Cart() {
+  const [toast, setToast] = useState(null);const showToast = (message, type = "info") => {
+  setToast({ message, type });
+
+  setTimeout(() => {
+    setToast(null);
+  }, 2000);
+};
+  
   const { isOpenCart, closeCart, cart, setCart } = useContext(CartContext);
 
   const removeItem = (id: string | number) => {
@@ -14,20 +22,42 @@ export function Cart() {
 
   const updateQuantity = (id: string | number, delta: number) => {
     const updated = cart.map(item => {
-      if (item.id === id) {
-        const currentQty = item.quantity || 1;
-        const newQty = Math.max(1, currentQty + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    });
+  if (item.id !== id) return item;
+
+  const currentQty = item.quantityCart || 1;
+
+  // منع الزيادة فوق المخزون
+  if (delta > 0 && currentQty >= item.quantity) {
+    showToast("وصلت للحد الأقصى", "error");
+    return item;
+  }
+
+  // منع النزول تحت 1
+  if (delta < 0 && currentQty <= 1) {
+    return item;
+  }
+
+  return {
+    ...item,
+    quantityCart: currentQty + delta
+  };
+});
     setCart(updated);
   };
-
+{toast && (
+  <div className="toast">
+    {toast}
+  </div>
+)}
   return (
     <AnimatePresence>
       {isOpenCart && (
-        <>
+        <>{toast && (
+  <div className={`toast ${toast.type}`}>
+    {toast.message}
+  </div>
+)}
+          
           <motion.div
             className="fixed inset-0 bg-black/40 z-[90] backdrop-blur-sm"
             onClick={closeCart}
@@ -73,7 +103,7 @@ export function Cart() {
                       +
                     </button>
                     <span className="text-[10px] font-black text-center bg-white py-0.5 border-y border-gray-100">
-                      {item.quantity || 1}
+                      {item.quantityCart || 1}
                     </span>
                     <button 
                       onClick={() => updateQuantity(item.id, -1)}
@@ -109,9 +139,11 @@ export function Cart() {
               <div className="flex justify-between items-center font-bold text-sm px-1">
                 <span className="text-gray-500">الإجمالي:</span>
                 <span className="text-green-700 font-black text-lg">
-                   {cart.reduce((total, item) => total + (Number(item.Price) * (item.quantity || 1)), 0)} <span className="text-xs">د.ج</span>
+                   {cart.reduce((total, item) => total + (Number(item.Price) * (item.quantityCart || 1)), 0)} <span className="text-xs">د.ج</span>
                 </span>
-              </div><Link
+              </div>
+              
+              <Link
   href={cart?.length > 0 ? "/checkout" : "#"}
   className={`block w-full py-3.5 rounded-xl text-sm font-black text-center transition-all
     ${
@@ -120,7 +152,7 @@ export function Cart() {
         : "bg-gray-400 text-gray-200 cursor-not-allowed"
     }`}
   onClick={(e) => {
-    if (cart?.length === 0) e.preventDefault();
+    if (cart?.length === 0) e.preventDefault();closeCart();
   }}
 >
   إتمام الطلب

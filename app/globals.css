@@ -4,7 +4,46 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: white;
+  z-index: 9999;
+  animation: fadeInOut 2s ease;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
 
+/* Success */
+.toast.success {
+  background: #22c55e;
+}
+
+/* Error */
+.toast.error {
+  background: #ef4444;
+}
+
+/* Warning */
+.toast.warning {
+  background: #f59e0b;
+}
+
+/* Info */
+.toast.info {
+  background: #3b82f6;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+}
 :root {
   --background: #f8f9fa; /* خلفية فاتحة جداً مريحة */
   --foreground: #171717;

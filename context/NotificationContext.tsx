@@ -23,7 +23,8 @@ export const NotificationProvider = ({ children }) => {
     console.log("RPC Data:", data);
 
     const rawData = data;
-alert(JSON.stringify(rawData))
+
+
     if (Array.isArray(rawData)) {
       setOrders(rawData);
 
@@ -52,7 +53,7 @@ alert(JSON.stringify(rawData))
 
           // 🔥 تشغيل الصوت فقط عند INSERT
           if (payload.eventType === "INSERT" && !isFirstLoad.current) {
-            const audio = new Audio('/sounds/notification.mp3');
+            const audio = new Audio('public/sounds/dragon-studio-notification-sound-effect-372475.mp3');
             audio.play().catch(() => {});
           }
 

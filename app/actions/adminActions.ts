@@ -185,6 +185,28 @@ export async function deleteProductAction(id: number) {
   
   return { error: error?.message };
 }
+//حذف السلة
+export async function deleteOrder(orderId) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('orders')
+      .delete()
+      .eq('order_id', orderId);
+
+    if (error) throw error;
+
+    console.log(`تم حذف الطلب رقم ${orderId} بنجاح`);
+    return { success: true, data };
+  } catch (error) {
+    console.error('خطأ أثناء الحذف:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+
+
+
+
 // جلب جميع المنتجات للوحة التحكم
 export async function getAllProductsForAdmin() {
   const { data, error } = await supabaseAdmin

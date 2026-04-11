@@ -49,15 +49,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     if (!exists) {
       // نضيف المنتج مع كمية افتراضية 1
-      setCart([...cart, { ...product, quantity: 1 }]);
+      setCart([...cart, { ...product, quantityCart: 1 }]);
       openCart();
     } else {
+      
       // إذا كان موجوداً، نزيد الكمية بدلاً من إظهار alert (أفضل لتجربة المستخدم)
-      const updated = cart.map(item => 
-        item.id === product.id ? { ...item, quantity: (item.quantity || 1) + 1 } : item
-      );
+ let showAlert=false;
+     const updated = cart.map(item =>
+  {if(item.id === product.id ) {
+    if( item.quantity < product.quantity){
+      return { ...item, quantity: (item.quantity || 1) + 1 };
+      
+    } else{showAlert=true;return item}
+    }else{ return item}}
+);
+if (showAlert) {
+  alert("وصلت للحد الأقصى");}
       setCart(updated);
-      openCart();
+    //  openCart();
     }
   };
 

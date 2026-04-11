@@ -8,7 +8,7 @@ export function AdminDrawer() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   
-  const { orders, unreadCount,  } = useNotifications();
+  const { orders, unreadCount,markAsRead  } = useNotifications();
 
   // منطق العرض: نعرض 4 سلات على الأقل، أو كل السلات الجديدة إذا كانت أكثر من 4
   const displayLimit = Math.max(4, unreadCount);

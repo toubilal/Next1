@@ -6,6 +6,13 @@ import { CartContext } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase"; // تأكد من مسار استيراد supabase لديك
 
 export default function CheckoutPage() {
+  const [toast, setToast] = useState(null);const showToast = (message, type = "info") => {
+  setToast({ message, type });
+
+  setTimeout(() => {
+    setToast(null);
+  }, 2000);
+};
   const { cart, setCart } = useContext(CartContext);
   const [loading, setLoading] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
@@ -22,13 +29,26 @@ export default function CheckoutPage() {
 
   const updateQuantity = (id: string | number, delta: number) => {
     const updated = cart.map(item => {
-      if (item.id === id) {
-        const currentQty = item.quantity || 1;
-        const newQty = Math.max(1, currentQty + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    });
+  if (item.id !== id) return item;
+
+  const currentQty = item.quantityCart || 1;
+
+  // منع الزيادة فوق المخزون
+  if (delta > 0 && currentQty >= item.quantity) {
+    showToast("وصلت للحد الأقصى", "error");
+    return item;
+  }
+
+  // منع النزول تحت 1
+  if (delta < 0 && currentQty <= 1) {
+    return item;
+  }
+
+  return {
+    ...item,
+    quantityCart: currentQty + delta
+  };
+});
     setCart(updated);
   };
 
@@ -71,6 +91,11 @@ if (result.success) {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
+      {toast && (
+  <div className={`toast ${toast.type}`}>
+    {toast.message}
+  </div>
+)}
       <div className="bg-white border-b sticky top-0 z-10 p-4 text-right">
         <h1 className="text-xl font-black text-center text-gray-800">تأكيد الطلب 🛒</h1>
       </div>
@@ -105,7 +130,7 @@ if (result.success) {
                       <p className="text-blue-600 font-black text-sm">{item.Price} د.ج</p>
                       <div className="flex items-center border rounded-lg overflow-hidden">
                         <button onClick={() => updateQuantity(item.id, 1)} className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-xs font-bold">+</button>
-                        <span className="px-3 text-xs font-bold">{item.quantity || 1}</span>
+                        <span className="px-3 text-xs font-bold">{item.quantityCart || 1}</span>
                         <button onClick={() => updateQuantity(item.id, -1)} className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-xs font-bold">-</button>
                       </div>
                     </div>
