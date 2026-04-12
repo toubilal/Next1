@@ -20,9 +20,11 @@ interface AddProductsProps {
 }
 
 export function Addproducts({ initialData, onProductAdded, onProductUpdate, categories,hideDrawer }: AddProductsProps){
-  
   useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [productDescription, setProductDescription] = useState("");
+const [productQuantity, setProductQuantity] = useState("");
+const [productDetails, setProductDetails] = useState("");
 const [allCategories, setAllCategories] = useState<string[]>([]);
 const [suggestions, setSuggestions] = useState<string[]>([]);
   const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,17 +161,24 @@ const handleCropSave = async () => {
 
   return (
     <motion.div 
-      // تم الربط بـ isCropping مباشرة لتعطيل السحب
-      drag={isCropping ? false : "y"} 
-      dragConstraints={{ top: 0, bottom: 0 }}
-      className="max-w-md mx-auto space-y-4 p-6 bg-white rounded-xl shadow-lg border border-gray-100"
-    >
-      <Toaster />
-      <h2 className="text-xl font-bold text-center text-black">
-        {isEditMode ? "تعديل بيانات المنتج" : "إضافة منتج جديد"}
-      </h2>
+  className="max-w-md mx-auto  h-[85vh] overflow-hidden rounded-2xl p-0 space-y-0"
 
-      <div className="flex flex-col space-y-2">
+
+>
+  <Toaster />
+ 
+  
+  
+  {/* العنوان الآن داخل حاوية بـ padding */}
+  <div className="p-6 pb-2">
+    <h2 className="text-xl font-bold text-center text-black">
+      {isEditMode ? "تعديل بيانات المنتج" : "إضافة منتج جديد"}
+    </h2>
+  </div>
+
+  {/* الحاوية الداخلية أصبحت هي التي تحمل الـ padding لتأخذ المساحة والتحكم */}
+ 
+      <div className="space-y-4 space-y-2">
         <label className="text-sm font-medium">صورة المنتج:</label>
         <input 
           type="file" 
@@ -179,9 +188,9 @@ const handleCropSave = async () => {
         />
 
         {isCropping && (
-          <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+          <div className="fixed inset-0 z-[100] bg-black ">
             <div 
-              className="relative flex-1 bg-[#1a1a1a]"
+              className="relative bg-[#1a1a1a]"
               // لمنع أي تداخل أحداث إضافي
               onPointerDownCapture={e => e.stopPropagation()}
             >
@@ -205,24 +214,28 @@ const handleCropSave = async () => {
                 onChange={(e) => setZoom(Number(e.target.value))} 
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
               />
-              <div className="flex gap-3">
+              <div className=" gap-3">
                <button 
   onClick={() => {
     setIsCropping(false);
     setTempFile(null); // مسح الملف المؤقت
     setFileInputKey(Date.now()); // إعادة تصفير الـ Input ليختفي الاسم
   }} 
-  className="flex-1 py-3 text-sm font-bold text-gray-500 bg-gray-100 rounded-xl"
+  className=" py-3 text-sm font-bold text-gray-500 bg-gray-100 rounded-xl"
 >
   إلغاء
 </button>
-<button onClick={handleCropSave} className="flex-2 py-3 text-sm font-bold text-white bg-blue-600 rounded-xl shadow-lg">اعتماد الصورة</button>
+<button onClick={handleCropSave} className=" py-3 text-sm font-bold text-white bg-blue-600 rounded-xl shadow-lg">اعتماد الصورة</button>
               </div>
             </div>
           </div>
         )}
       </div>
-
+       <div
+  
+  className="max-h-[44vh] overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-0"
+>
+ <div className="  p-6 pt-2 space-y-4 ">
       <input 
         placeholder="اسم المنتج" 
         className="w-full p-3 border border-slate-300 rounded-xl bg-white text-black placeholder:text-slate-400 focus:border-primary outline-none transition-all shadow-sm"
@@ -247,8 +260,38 @@ const handleCropSave = async () => {
     // لإخفاء القائمة عند النقر خارجاً (مع تأخير بسيط ليسمح بالضغط على الاقتراح)
     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} 
   />
+  
+  {/* خانة الوصف */}
+<textarea 
+  placeholder="وصف المنتج" 
+  className="w-full p-3 border border-slate-300 rounded-xl bg-white text-black outline-none transition-all shadow-sm focus:border-primary h-24 resize-none"
+  value={productDescription}
+  onChange={(e) => setProductDescription(e.target.value)}
+/>
+
+{/* خانة الكمية المتاحة */}
+<input 
+  placeholder="الكمية المتاحة" 
+  type="number"
+  className="w-full p-3 border border-slate-300 rounded-xl bg-white text-black outline-none transition-all shadow-sm focus:border-primary"
+  value={productQuantity}
+  onChange={(e) => setProductQuantity(e.target.value)}
+/>
+
+{/* خانة التفاصيل (JSONB) */}
+<div className=" space-y-4">
+  <textarea 
+    placeholder="تفاصيل إضافية (بصيغة JSON)" 
+    className="w-full p-3 border border-slate-300 rounded-xl bg-white text-black outline-none transition-all shadow-sm focus:border-primary font-mono text-[10px]"
+    value={productDetails}
+    onChange={(e) => setProductDetails(e.target.value)}
+  />
+  <p className="text-[10px] text-slate-400 px-1">مثال: {"{ \"color\": \"red\", \"size\": \"xl\" }"}</p>
+</div>
+
+  
       {showSuggestions && suggestions.length > 0 && (
-    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-40 overflow-y-auto">
+    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-40 ">
       {suggestions.map((suggestion, index) => (
         <div
           key={index}
@@ -263,7 +306,9 @@ const handleCropSave = async () => {
       ))}
     </div>
   )}
-
+  </div>
+  </div>
+ <div className="mt-auto pt-2">
       <button 
         onClick={handleAction}
         disabled={isUploading}
@@ -272,11 +317,13 @@ const handleCropSave = async () => {
         }`}
       >
         {isUploading ? (
-          <span className="flex items-center justify-center gap-2">
+          <span className=" items-center justify-center gap-2">
             <Loader2 className="animate-spin h-4 w-4" /> جاري الحفظ...
           </span>
         ) : isEditMode ? "تحديث المنتج" : "حفظ في السيرفر"}
       </button>
+      </div>
+      
     </motion.div>
   );
 }

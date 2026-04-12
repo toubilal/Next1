@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useNotifications } from "@/context/NotificationContext";
-import { Stats, getRecentOrders, getWeeklyStats,update_quantity_rpc ,handleConfirmOrder,deleteOrder} from '@/app/actions/adminActions'; // تأكد من استيراد دالة التحديث
+import { deleteId_order,Stats, getRecentOrders, getWeeklyStats,update_quantity_rpc ,handleConfirmOrder,deleteOrder} from '@/app/actions/adminActions'; // تأكد من استيراد دالة التحديث
 import {Check, X, DollarSign,Loader2,Eye,Trash2, ShoppingCart, RefreshCw,RefreshCcw } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Link from 'next/link';
@@ -54,6 +54,7 @@ export default function StatsPage() {
           groups[groupKey].items.push({
             id: order.id,
             product_id: order.product_id,
+           
             quantity: order.quantity,
             product: order.product 
           });
@@ -71,7 +72,7 @@ export default function StatsPage() {
   
   // الحالة الآن ستخزن كائن يحتوي على الـ ID ونوع العملية
 const [loadingProcess, setLoadingProcess] = useState({ id: null, type: null });
-
+const [disabledOrders, setDisabledOrders] = useState([]);
 const handleClick = async (orderId, newStat, items = null) => {
   if (loadingProcess.id === orderId) return;
 
@@ -117,7 +118,18 @@ const handleClick = async (orderId, newStat, items = null) => {
 
 };
 
+const handleDelete = async (orderId, productId,id) => {
+  const ok = window.confirm("هل أنت متأكد من الحذف؟");
+  if (!ok) return;
 
+  const res = await deleteId_order(id);
+
+  if (res.success) {
+    removeItemFromOrder(orderId, productId);
+  } else {
+    alert(res.error || "حدث خطأ");
+  }
+};
 
   // دالة حذف منتج محدد
   const removeItemFromOrder = (orderId, productId) => {
@@ -274,14 +286,30 @@ const handleClick = async (orderId, newStat, items = null) => {
               {/* قائمة المنتجات في السلة */}
               <div className="space-y-1.5 mb-4">
                 {group.items.map((item: any, idx: number) => (
-  <div key={idx} className="flex items-center gap-2 text-[11px] text-slate-600 bg-slate-50/50 p-1.5 rounded-xl">
+  <div
+    key={idx}
+    // يجب الحفاظ على 'relative' هنا لضمان عمل السحابة
+    className={`relative flex items-center gap-2 text-[11px] p-1.5 rounded-xl transition-all duration-300 ${
+      item.quantity > item.product?.quantity_all ? "bg-red-100 mt-8" : "mt-2"
+    }`}
+  >
+    {/* --- بداية تعديل السحابة --- */}
+    {item.quantity > item.product?.quantity_all && (
+      <div className="absolute -top-7 right-1 z-50 bg-yellow-100 border border-yellow-300 text-yellow-800 text-[9px] px-2 py-1 rounded-md shadow-lg whitespace-nowrap animate-in fade-in slide-in-from-bottom-2">
+        ⚠️ الكمية غير متاحة
+        {/* الذيل المعكوس والمموضع على اليمين فوق الصورة */}
+        <div className="absolute -bottom-1 right-2.5 w-2 h-2 bg-yellow-100 border-b border-r border-yellow-300 rotate-45"></div>
+      </div>
+    )}
+    {/* --- نهاية تعديل السحابة --- */}
+
     {/* صورة المنتج */}
-    <img 
-      src={item.product?.Image || "https://via.placeholder.com/40"} 
-      className="w-7 h-7 rounded-lg object-cover bg-white flex-shrink-0" 
-      alt="" 
+    <img
+      src={item.product?.Image || "https://via.placeholder.com/40"}
+      className="w-7 h-7 rounded-lg object-cover bg-white flex-shrink-0"
+      alt=""
     />
-    
+
     {/* اسم المنتج */}
     <span className="truncate flex-1 font-medium text-right">
       {item.product?.Title || "منتج"}
@@ -289,9 +317,9 @@ const handleClick = async (orderId, newStat, items = null) => {
 
     {/* حاوية التحكم في الكمية */}
     <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-1">
-      {/* زر الناقص - يظهر فقط في حالة الانتظار */}
+      {/* زر الناقص */}
       {group.status === 'pending' && (
-        <button 
+        <button
           onClick={() => updateItemQuantity(group.order_id, item.product_id, -1)}
           className="w-5 h-5 flex items-center justify-center text-red-500 font-bold hover:bg-red-50 rounded"
         >
@@ -300,17 +328,20 @@ const handleClick = async (orderId, newStat, items = null) => {
       )}
 
       {/* رقم الكمية الحالي */}
-      <span className="font-black text-blue-600 min-w-[20px] text-center px-1">
+      <span
+        className={`font-black min-w-[20px] text-center px-1 ${
+          item.quantity > item.product?.quantity_all
+            ? "text-red-600"
+            : "text-blue-600"
+        }`}
+      >
         x{item.quantity}
       </span>
 
-      {/* زر الزائد - يظهر فقط في حالة الانتظار */}
+      {/* زر الزائد */}
       {group.status === 'pending' && (
-        <button 
-          onClick={() => updateItemQuantity(group.order_id, item.product_id, 1)
-            
-            
-          }
+        <button
+          onClick={() => updateItemQuantity(group.order_id, item.product_id, 1)}
           className="w-5 h-5 flex items-center justify-center text-emerald-600 font-bold hover:bg-emerald-50 rounded"
         >
           +
@@ -318,18 +349,19 @@ const handleClick = async (orderId, newStat, items = null) => {
       )}
     </div>
 
-    {/* زر الحذف - يظهر فقط في حالة الانتظار */}
+    {/* زر الحذف */}
     {group.status === 'pending' && (
-      <button 
-        onClick={() => removeItemFromOrder(group.order_id, item.product_id)}
+      <button
+        onClick={() => handleDelete(group.order_id, item.product_id, item.id)}
         className="p-1 text-slate-400 hover:text-red-500 transition-colors"
         title="حذف المنتج من الطلب"
       >
-        <Trash2 size={14} /> 
+        <Trash2 size={14} />
       </button>
     )}
   </div>
 ))}
+
 
               </div>
 
@@ -338,7 +370,9 @@ const handleClick = async (orderId, newStat, items = null) => {
   <button
     onClick={() => handleClick(group.order_id, 'confirmed', group.items)}
     className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs disabled:opacity-50"
-    disabled={loadingProcess.id} // يتجمد إذا كان هناك أي عملية لهذا الطلب
+    disabled={loadingProcess.id||group.items.some(
+  item => item.quantity > item.product?.quantity_all
+)} // يتجمد إذا كان هناك أي عملية لهذا الطلب
   >
     {/* يظهر التحميل فقط إذا كان الـ type هو 'confirmed' */}
     {loadingProcess.id === group.order_id && loadingProcess.type === 'confirmed' ? (

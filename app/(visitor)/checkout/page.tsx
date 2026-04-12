@@ -59,14 +59,14 @@ export default function CheckoutPage() {
 
   try {
     // تجهيز البيانات بشكل نظيف وسطر واحد لكل منتج
-    const ordersToInsert = cart.map((item) => ({
+    /*const ordersToInsert = cart.map((item) => ({
       product_id: item.id,
       customer_name: customerInfo.fullName,
       customer_phone: customerInfo.phone,
       quantity: item.quantity || 1, // إرسال القيمة للعمود الجديد
      customer_address: customerInfo.address ,
       status: 'pending'
-    }));
+    }));*/
 
     const result = await submitOrderAction(cart, customerInfo);
 if (result.success) {

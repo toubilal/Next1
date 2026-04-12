@@ -56,7 +56,7 @@ export async function getRecentOrders() {
       customer_name,
       customer_phone,
       customer_address,
-      product:sys_data_node_77 ( Title, Image ) 
+      product:sys_data_node_77 ( Title, Image,quantity_all:quantity ) 
     `)
     .order('created_at', { ascending: false });
 
@@ -174,6 +174,19 @@ export async function updateProductAction(id: number, payload: any) {
     .select();
 
   return { error: error?.message, data };
+}
+//حذف منتج من السلة
+export async function deleteId_order(id: string) {
+  const { error } = await supabaseAdmin
+    .from('orders')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
 }
 
 // 3. حذف منتج

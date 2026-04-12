@@ -198,53 +198,53 @@ return (
 </button>
 <AnimatePresence>
   {isDrawerOpen && (
-    <>
-      {/* 1. الخلفية المظلمة لإغلاق النافذة عند الضغط خارجها */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={() => setIsDrawerOpen(false)}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
-      />
+  <>
+    {/* 1. الخلفية المظلمة */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={() => setIsDrawerOpen(false)}
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+    />
 
-      {/* 2. جسم النافذة البيضاء */}
-      <motion.div
-     initial={{ y: "100%" }}
-  animate={{ y: 0 }}
-  exit={{ y: "100%" }} // هذا هو السر: عند الإغلاق سينزل للأسفل
-  transition={{ type: "spring", damping: 25, stiffness: 200 }}
-  
-  drag="y"
-  dragConstraints={{ top: 0, bottom: 0 }}
-  dragElastic={0.5} // زيادة المرونة قليلاً
-  
-  // هذه الخاصية تمنع الاختفاء المفاجئ وتجعل الـ Drawer يتبع اليد
-  onDragEnd={(_, info) => {
-    // إذا كانت سرعة السحب عالية أو المسافة كبيرة، نغلق النافذة
-    if (info.offset.y > 150 || info.velocity.y > 500) {
-      setIsDrawerOpen(false);
-    }
-  }}
-        className="fixed bottom-0 inset-x-0 z-[70] bg-white rounded-t-[32px] p-6 max-h-[90vh] overflow-y-auto"
-   
-      >
-        {/* مقبض صغير للسحب (شكل جمالي) */}
-        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6" />
+    {/* 2. جسم النافذة البيضاء */}
+    <motion.div
+      initial={{ y: "100%" }}
+      animate={{ y: 0 }}
+      exit={{ y: "100%" }}
+      transition={{ type: "spring", damping: 25, stiffness: 200 }}
+      drag="y"
+      dragConstraints={{ top: 0, bottom: 0 }}
+      dragElastic={0.5}
+      onDragEnd={(_, info) => {
+        if (info.offset.y > 100 || info.velocity.y > 400) {
+          setIsDrawerOpen(false);
+        }
+      }}
+              className="fixed bottom-0 inset-x-0 z-[70] bg-white rounded-t-[32px] p-0 max-h-[75vh] "
+    >
+      {/* مقبض السحب */}
+      <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto my-4 flex-shrink-0" />
 
-        {/* المكون الخاص بك للإضافة أصبح الآن داخل هذه النافذة */}
+      {/* الحاوية الأساسية للـ Scroll */}
+      {/* التعديل: أضفنا overflow-y-auto هنا وجعلنا الارتفاع كامل h-full */}
+      <div className=" px-4 pb-6 ">
         <Addproducts 
+           // تأكد أن المكون يمتد ليشمل الزر
           initialData={editingProduct} 
           hideDrawer={hideDrawer}
           categories={existingCategories}
           onProductAdded={(newProd) => {
             addNewProductLocally(newProd);
-            setIsDrawerOpen(false); // نغلق النافذة تلقائياً بعد الحفظ
+            setIsDrawerOpen(false);
           }} 
         />
-      </motion.div>
-    </>
-  )}
+      </div>
+    </motion.div>
+  </>
+)}
+
 </AnimatePresence>
 
     </div>
