@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from "react"
-import { motion } from 'framer-motion'
+import {MoreInfo} from '@/components/admin/more-informations'
+import { motion,AnimatePresence } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import Cropper from 'react-easy-crop'
 import {addProductAction,updateProductAction} from'@/app/actions/adminActions'
@@ -13,15 +14,17 @@ import { getCroppedImg } from '@/utils/cropImage'
 
 interface AddProductsProps {
   initialData?: any;
-  onProductAdded: (product: any) => void;
+  onProductAdded?: (product: any) => void;
   onProductUpdate?: (id: string, updatedData: any) => void;
   categories: string[];
   hideDrawer?:(newProduct:any)=>void// أضف هذا السطر
 }
 
-export function Addproducts({ initialData, onProductAdded, onProductUpdate, categories,hideDrawer }: AddProductsProps){
+export function Addproducts({ initialData, onProductAdded, onProductUpdate, categories,hideDrawer,onStartCrop,
+  onStopCrop }: AddProductsProps){
   useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
   const [productDescription, setProductDescription] = useState("");
 const [productQuantity, setProductQuantity] = useState("");
 const [productDetails, setProductDetails] = useState("");
@@ -79,6 +82,7 @@ const [suggestions, setSuggestions] = useState<string[]>([]);
     reader.addEventListener('load', () => {
       setImageSrc(reader.result as string);
       setIsCropping(true);
+      onStartCrop();
     });
     reader.readAsDataURL(selectedFile);
   }
@@ -91,6 +95,7 @@ const handleCropSave = async () => {
       const croppedFile = new File([croppedBlob], tempFile?.name || "product.jpg", { type: "image/jpeg" });
       setfile(croppedFile); // الآن فقط اعتمدنا الملف
       setIsCropping(false);
+      onStopCrop();
       toast.success("تم اعتماد الصورة");
     }
   } catch (e) {
@@ -160,10 +165,8 @@ const handleCropSave = async () => {
   };
 
   return (
-    <motion.div 
-  className="max-w-md mx-auto  h-[85vh] overflow-hidden rounded-2xl p-0 space-y-0"
-
-
+   <motion.div 
+  className="max-w-5xl mx-auto p-0 md:p-0 space-y-6 mb-5" dir="rtl"
 >
   <Toaster />
  
@@ -188,52 +191,62 @@ const handleCropSave = async () => {
         />
 
         {isCropping && (
-          <div className="fixed inset-0 z-[100] bg-black ">
-            <div 
-              className="relative bg-[#1a1a1a]"
-              // لمنع أي تداخل أحداث إضافي
-              onPointerDownCapture={e => e.stopPropagation()}
-            >
-              <Cropper
-                image={imageSrc!}
-                crop={crop}
-                zoom={zoom}
-                aspect={1}
-                onCropChange={setCrop}
-                onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
-                onZoomChange={setZoom}
-              />
-            </div>
-            <div className="bg-white p-6 rounded-t-3xl space-y-4">
-              <input 
-                type="range" 
-                value={zoom} 
-                min={1} 
-                max={3} 
-                step={0.1} 
-                onChange={(e) => setZoom(Number(e.target.value))} 
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
-              />
-              <div className=" gap-3">
-               <button 
-  onClick={() => {
-    setIsCropping(false);
-    setTempFile(null); // مسح الملف المؤقت
-    setFileInputKey(Date.now()); // إعادة تصفير الـ Input ليختفي الاسم
-  }} 
-  className=" py-3 text-sm font-bold text-gray-500 bg-gray-100 rounded-xl"
->
-  إلغاء
-</button>
-<button onClick={handleCropSave} className=" py-3 text-sm font-bold text-white bg-blue-600 rounded-xl shadow-lg">اعتماد الصورة</button>
-              </div>
-            </div>
-          </div>
-        )}
+  <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+
+    {/* 🖼️ منطقة القص */}
+    <div className="flex-1 relative bg-[#1a1a1a]">
+      <Cropper
+        image={imageSrc!}
+        crop={crop}
+        zoom={zoom}
+        aspect={1}
+        onCropChange={setCrop}
+        onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
+        onZoomChange={setZoom}
+      />
+    </div>
+
+    {/* 🎛️ controls */}
+    <div className="bg-white p-6 rounded-t-3xl space-y-4">
+
+      <input 
+        type="range" 
+        value={zoom} 
+        min={1} 
+        max={3} 
+        step={0.1} 
+        onChange={(e) => setZoom(Number(e.target.value))} 
+        className="w-full"
+      />
+
+      <div className="flex gap-3">
+        <button 
+          onClick={() => {
+            setIsCropping(false);
+            onStopCrop();
+            setTempFile(null);
+            setFileInputKey(Date.now());
+          }} 
+          className="flex-1 py-3 text-sm font-bold text-gray-500 bg-gray-100 rounded-xl"
+        >
+          إلغاء
+        </button>
+
+        <button 
+          onClick={handleCropSave} 
+          className="flex-1 py-3 text-sm font-bold text-white bg-blue-600 rounded-xl shadow-lg"
+        >
+          اعتماد الصورة
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
       </div>
        <div
   
-  className="max-h-[44vh] overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-0"
+   className="flex-1 overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-0"
 >
  <div className="  p-6 pt-2 space-y-4 ">
       <input 
@@ -243,13 +256,7 @@ const handleCropSave = async () => {
         onChange={(e) => setProductName(e.target.value)}
       />
 
-      <input 
-        placeholder="السعر" 
-        type="number"
-        className="w-full p-3 border border-slate-300 rounded-xl bg-white text-black outline-none transition-all shadow-sm"
-        value={productPrice}
-        onChange={(e) => setProductPrice(e.target.value)}
-      />
+      
 
       <input 
     placeholder="الصنف" 
@@ -269,25 +276,73 @@ const handleCropSave = async () => {
   onChange={(e) => setProductDescription(e.target.value)}
 />
 
-{/* خانة الكمية المتاحة */}
-<input 
-  placeholder="الكمية المتاحة" 
-  type="number"
-  className="w-full p-3 border border-slate-300 rounded-xl bg-white text-black outline-none transition-all shadow-sm focus:border-primary"
-  value={productQuantity}
-  onChange={(e) => setProductQuantity(e.target.value)}
-/>
+<>
+  {/* السعر + الكمية (ثابتين 100%) */}
+  <motion.div layout className="space-y-4">
+    <input 
+      placeholder="السعر" 
+      type="number"
+      disabled={isMoreOpen}
+      className={`w-full p-3 border rounded-xl outline-none shadow-sm transition
+        ${isMoreOpen 
+          ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' 
+          : 'bg-white text-black border-slate-300'
+        }`}
+      value={productPrice}
+      onChange={(e) => setProductPrice(e.target.value)}
+    />
+
+    <input 
+      placeholder="الكمية المتاحة" 
+      type="number"
+      disabled={isMoreOpen}
+      className={`w-full p-3 border rounded-xl outline-none shadow-sm transition
+        ${isMoreOpen 
+          ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' 
+          : 'bg-white text-black border-slate-300'
+        }`}
+      value={productQuantity}
+      onChange={(e) => setProductQuantity(e.target.value)}
+    />
+  </motion.div>
+
+  {/* الزر */}
+  <div className="flex flex-col gap-2 mt-2">
+    <button 
+      onClick={() => setIsMoreOpen(!isMoreOpen)}
+      className="flex items-center justify-between px-4 py-2 rounded-lg text-sm bg-gray-100 text-gray-800"
+    >
+      <span>تفاصيل إضافية</span>
+      <span className={`transition-transform duration-300 ${isMoreOpen ? 'rotate-180' : ''}`}>
+        ▼
+      </span>
+    </button>
+  </div>
+
+  {/* فقط هذا داخل AnimatePresence */}
+  <AnimatePresence mode="wait">
+    {isMoreOpen && (
+      <motion.div
+        key="moreinfo"
+        layout
+        initial={{ opacity: 0, y: -10, height: 0 }}
+        animate={{ opacity: 1, y: 0, height: 'auto' }}
+        exit={{ opacity: 0, y: -10, height: 0 }}
+        transition={{ duration: 0.3 }}
+        className="overflow-hidden"
+      >
+        <p className="text-xs text-gray-500 mb-2">
+          مثال: اللون، الحجم، الماركة، أو أي معلومات إضافية
+        </p>
+        <MoreInfo />
+      </motion.div>
+    )}
+  </AnimatePresence>
+</>
+
 
 {/* خانة التفاصيل (JSONB) */}
-<div className=" space-y-4">
-  <textarea 
-    placeholder="تفاصيل إضافية (بصيغة JSON)" 
-    className="w-full p-3 border border-slate-300 rounded-xl bg-white text-black outline-none transition-all shadow-sm focus:border-primary font-mono text-[10px]"
-    value={productDetails}
-    onChange={(e) => setProductDetails(e.target.value)}
-  />
-  <p className="text-[10px] text-slate-400 px-1">مثال: {"{ \"color\": \"red\", \"size\": \"xl\" }"}</p>
-</div>
+
 
   
       {showSuggestions && suggestions.length > 0 && (
@@ -312,7 +367,7 @@ const handleCropSave = async () => {
       <button 
         onClick={handleAction}
         disabled={isUploading}
-        className={`w-full text-black p-4 rounded-xl font-extrabold text-sm uppercase tracking-widest transition-all shadow-lg ${
+        className={`w-full text-black p-4 rounded-xl font-extrabold text-sm "mt-auto pt-2 pb-[env(safe-area-inset-bottom) uppercase tracking-widest transition-all shadow-lg ${
           isUploading ? 'bg-slate-200 cursor-not-allowed' : 'bg-primary hover:bg-[#b8952e] active:scale-95'
         }`}
       >

@@ -80,7 +80,7 @@ export function Cart() {
             </div>
 
             {/* المحتوى */}
-            <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-3 overscroll-contain custom-scrollbar">
               {cart.map((item) => (
                 <div key={item.id} className="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
                   

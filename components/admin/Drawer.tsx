@@ -13,12 +13,23 @@ export function AdminDrawer() {
   // منطق العرض: نعرض 4 سلات على الأقل، أو كل السلات الجديدة إذا كانت أكثر من 4
   const displayLimit = Math.max(4, unreadCount);
   const displayedOrders = orders.slice(0, displayLimit);
-
+const [openIndex, setOpenIndex] = useState(null);
   const adminItems = [
-    { name: "إدارة المنتجات", path: "/products", icon: <Package size={20} /> },
+    {
+      name: "إدارة المنتجات",
+      path: "/products",
+      icon: <Package size={20} />,
+      children: [
+        { name: "إضافة منتج", path: "/products/add", icon: "📦" },
+        { name: "إضافة صنف", path: "/products/category", icon: "🏷" },
+      ],
+    },
     { name: "الإحصائيات", path: "/stats", icon: <BarChart3 size={20} /> },
     { name: "الإعدادات", path: "/settings", icon: <Settings size={20} /> },
   ];
+const toggle = (index) => {
+    setOpenIndex(openIndex === index ? null : index);
+  };
 
   return (
     <>
@@ -60,11 +71,47 @@ export function AdminDrawer() {
             </Link>
             <div className="pt-4 mt-4 border-t border-slate-100">
               <p className="text-[10px] font-bold text-slate-400 mb-2 px-3 uppercase tracking-widest">الإدارة</p>
-              {adminItems.map((item, index) => (
-                <Link key={index} href={item.path} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 p-3 text-slate-700 hover:bg-primary/5 hover:text-primary rounded-xl transition-all font-semibold">
-                  {item.icon} {item.name}
-                </Link>
-              ))}
+             {adminItems.map((item, index) => (
+        <div key={index}>
+          
+          {/* العنصر الرئيسي */}
+          <div className="flex items-center justify-between p-3 text-slate-700 hover:bg-primary/5 rounded-xl font-semibold">
+             
+            <Link href={item.path} className="flex items-center gap-3">
+              {item.icon}
+              {item.name}
+            </Link>
+{/* السهم */}
+            {item.children && (
+              <button onClick={() => toggle(index)} className="text-lg">
+                {openIndex === index ? "⌄" : "›"}
+              </button>
+            )}
+           
+          </div>
+
+          {/* العناصر الفرعية */}{/* العناصر الفرعية */}
+{item.children && openIndex === index && (
+  <div className="ml-6 mt-1 border-r-2 border-primary/20 pr-4"> {/* تعديل الحدود والمسافات */}
+    <div className="flex flex-col gap-1">
+      {item.children.map((child, i) => (
+        <Link
+          key={i}
+          href={child.path}
+          className="flex items-center gap-2 p-2 text-sm text-slate-600 hover:text-primary transition-all duration-200"
+        >
+          <span className="w-1 h-1 rounded-full bg-slate-400"></span> {/* نقطة صغيرة للتمييز */}
+          {child.icon}
+          {child.name}
+        </Link>
+      ))}
+    </div>
+  </div>
+)}
+
+         
+        </div>
+      ))}
             </div>
           </nav>
           <button className="w-full flex items-center gap-4 p-3 text-red-500 hover:bg-red-50 rounded-xl font-bold border-t mt-4">
@@ -87,7 +134,7 @@ export function AdminDrawer() {
             } className="p-1 hover:bg-slate-200 rounded-lg"><X size={20} /></button>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto space-y-3 overscroll-contain custom-scrollbar">
             {displayedOrders.length === 0 ? (
               <div key={0} className="flex flex-col items-center justify-center h-40 text-slate-400 opacity-50">
                 <ShoppingBag size={40} className="mb-2" />

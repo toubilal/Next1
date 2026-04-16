@@ -1,6 +1,7 @@
 'use client' 
 import { useEffect, useState } from 'react'
 import { Plus,Edit3 ,X,Heart, ShoppingBag, Star } from "lucide-react"
+import FloatingMenu from '@/components/layout/FloatingMenu';
 import {deleteImageFile} from '@/app/actions.ts'
 import { useRouter } from 'next/navigation';
 import { updateProductStatus } from '@/app/actions/adminActions' 
@@ -12,11 +13,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import {CategoryBar} from'@/components/store/CategoryBar'
 export  function ProductsPage() {
-  
+  const [isCropping, setIsCropping] = useState(false);
+
+const startCropping = () => setIsCropping(true);
+const stopCropping = () => setIsCropping(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [products, setProducts] = useState([]) // مخزن للمنتجات
   const [loading, setLoading] = useState(true) // حالة التحميل
-
+const myActions = [
+    { icon: '🏷️' ,label:'إضافة صنف',onClick: () => console.log('إضافة منتج') },
+    { icon: '📦', label:'اضافة منتج',onClick: () => {setEditingProduct(null); setIsDrawerOpen(true); 
+    }},
+  ];
 const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 const [editingProduct, setEditingProduct] = useState<any>(null); 
 
@@ -187,58 +195,60 @@ return (
         })}
       </AnimatePresence>
       {/* زر الإضافة العائم في أسفل الشاشة */}
-<button
-  onClick={() => {
-    setEditingProduct(null); // نتأكد أنه فارغ لأنه "إضافة" وليس "تعديل"
-    setIsDrawerOpen(true);
-  }}
-  className="fixed bottom-6 right-6 z-50 bg-primary text-white p-4 rounded-full shadow-2xl active:scale-90 transition-all flex items-center justify-center"
->
-  <Plus className="h-6 w-6" />
-</button>
+ <FloatingMenu actions={myActions} />
+
 <AnimatePresence>
   {isDrawerOpen && (
   <>
-    {/* 1. الخلفية المظلمة */}
+    {/* الخلفية */}
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={() => setIsDrawerOpen(false)}
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+      onClick={() => {
+        if (!isCropping) setIsDrawerOpen(false);
+      }}
+      className="fixed inset-0 z-50 bg-black/40"
     />
 
-    {/* 2. جسم النافذة البيضاء */}
+    {/* Drawer */}
     <motion.div
       initial={{ y: "100%" }}
       animate={{ y: 0 }}
       exit={{ y: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      drag="y"
+
+      /* 🔥 تعطيل السحب أثناء القص */
+      drag={isCropping ? false : "y"}
+
       dragConstraints={{ top: 0, bottom: 0 }}
-      dragElastic={0.5}
+      dragElastic={isCropping ? 0 : 0.5}
+
       onDragEnd={(_, info) => {
+        if (isCropping) return;
+
         if (info.offset.y > 100 || info.velocity.y > 400) {
           setIsDrawerOpen(false);
         }
       }}
-              className="fixed bottom-0 inset-x-0 z-[70] bg-white rounded-t-[32px] p-0 max-h-[75vh] "
+
+      className="fixed bottom-0 inset-x-0 z-[70] bg-white rounded-t-3xl max-h-[85dvh] flex flex-col overflow-hidden"
     >
-      {/* مقبض السحب */}
+      {/* handle */}
       <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto my-4 flex-shrink-0" />
 
-      {/* الحاوية الأساسية للـ Scroll */}
-      {/* التعديل: أضفنا overflow-y-auto هنا وجعلنا الارتفاع كامل h-full */}
-      <div className=" px-4 pb-6 ">
-        <Addproducts 
-           // تأكد أن المكون يمتد ليشمل الزر
-          initialData={editingProduct} 
+      {/* content */}
+     <div className={`flex-1 overflow-y-auto px-4 pb-6 overscroll-contain ${isCropping ? "overflow-hidden" : ""}`}>
+        <Addproducts
+          initialData={editingProduct}
           hideDrawer={hideDrawer}
           categories={existingCategories}
+         onStartCrop={startCropping}
+  onStopCrop={stopCropping}
           onProductAdded={(newProd) => {
             addNewProductLocally(newProd);
             setIsDrawerOpen(false);
-          }} 
+          }}
         />
       </div>
     </motion.div>
