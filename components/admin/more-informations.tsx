@@ -1,8 +1,20 @@
 'use client'
 import { motion,AnimatePresence } from 'framer-motion'
-import { useState } from "react";
+import { useState,useRef } from "react";
+import { useEffect } from "react";
 import FloatingMenu from '@/components/layout/FloatingMenu';
-export  function MoreInfo() { const [type, setType] = useState("variant");
+interface moreInfoPropos{
+  setextra_payload:(payload:any)=>void;
+  initialData?: {
+    variants?: any[];
+    storages?: string[];
+    colors?: string[];
+  };
+}
+
+export  function MoreInfo({setextra_payload,initialData} :moreInfoPropos) { 
+  
+const [type, setType] = useState("variant");
 
 // attributes 
 const [storageInput, setStorageInput] = useState(""); const [colorInput, setColorInput] = useState("");
@@ -51,11 +63,52 @@ const addColor = () => {
   setVariants([...variants, newVariant]);
   setColorInput("");
 };
+const hasInitialized = useRef(false);
+useEffect(() => {
+  if (!initialData || hasInitialized.current) return;
 
-const updateVariant = (index, field, value) => { const updated = [...variants]; updated[index][field] = value; setVariants(updated); };
+  const rawVariants = initialData.variants || [];
+
+  // تحويل البيانات من الشكل المتداخل إلى الشكل المسطح (Flattening)
+  const flattenedVariants = rawVariants.map((v) => ({
+    // نأخذ القيم من options ونخرجها للمستوى الأعلى
+    storage: v.options?.storage || "",
+    color: v.options?.color || "",
+    price: v.price || 0,
+    stock: v.stock || 0,
+  }));
+
+  setVariants(flattenedVariants);
+
+  // استخراج الـ storages من البيانات المسطحة
+  const extractedStorages = [...new Set(flattenedVariants.map(x => x.storage))];
+  setStorages(extractedStorages);
+
+  if (extractedStorages.length) {
+    setSelectedStorage(extractedStorages[0]);
+  }
+
+  hasInitialized.current = true;
+}, [initialData]);
+
+
+const updateVariant = (index, field, value) => {
+  setVariants(prev =>
+    prev.map((v, i) =>
+      i === index ? { ...v, [field]: Number(value) } : v
+    )
+  );
+};
 
 const handleSubmit = () => { console.log({ variants }); alert("Check console"); };
 
+useEffect(() => {
+  setextra_payload({
+    variants,
+    storages,
+    colors,
+  });
+}, [variants, storages, colors]);
 return ( <div className="max-w-4xl mx-auto">
   <AnimatePresence mode="popLayout">
     <motion.div layout className="space-y-6">
@@ -101,11 +154,11 @@ return ( <div className="max-w-4xl mx-auto">
               className="border border-slate-300 p-4 rounded-xl bg-white shadow-sm"
             >
               <h2 className="font-semibold mb-3 text-slate-700">
-                Colors for: <span className="text-primary">{selectedStorage}</span>
+                 <span className="text-primary">{selectedStorage}</span>
               </h2>
               <div className="flex gap-2">
                 <input
-                placeholder="مثلا اللون."
+                placeholder="مثلا اللون....."
                   value={colorInput}
                   onChange={(e) => setColorInput(e.target.value)}
                   className="w-full p-3 border border-slate-300 rounded-xl"
@@ -131,8 +184,8 @@ return ( <div className="max-w-4xl mx-auto">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
-                    <th className="p-3 text-right">Storage</th>
-                    <th className="p-3 text-right">Color</th>
+                    <th className="p-3 text-right"></th>
+                    <th className="p-3 text-right"></th>
                     <th className="p-3 text-right">Stock</th>
                     <th className="p-3 text-right">Price</th>
                   </tr>

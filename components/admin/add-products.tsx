@@ -29,7 +29,23 @@ export function Addproducts({ initialData, onProductAdded, onProductUpdate, cate
 const [productQuantity, setProductQuantity] = useState("");
 const [productDetails, setProductDetails] = useState("");
 const [allCategories, setAllCategories] = useState<string[]>([]);
+const [variants, setVariants] = useState([]);
 const [suggestions, setSuggestions] = useState<string[]>([]);
+const setextra_payload = (payload: any) => {
+  // نقوم بتحويل المصفوفة القادمة من المكون إلى الشكل المطلوب لـ Supabase
+  const formattedVariants = payload.variants.map((v: any) => ({
+    options: {
+      color: v.color,
+      storage: v.storage,
+    },
+    price: Number(v.price),
+    stock: Number(v.stock),
+  }));
+
+  // الآن نحفظ النسخة المنسقة في الـ state
+  setVariants(formattedVariants);
+};
+
   const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setproductCategory(value);
@@ -82,7 +98,7 @@ const [suggestions, setSuggestions] = useState<string[]>([]);
     reader.addEventListener('load', () => {
       setImageSrc(reader.result as string);
       setIsCropping(true);
-      onStartCrop();
+      onStartCrop?.();
     });
     reader.readAsDataURL(selectedFile);
   }
@@ -95,7 +111,7 @@ const handleCropSave = async () => {
       const croppedFile = new File([croppedBlob], tempFile?.name || "product.jpg", { type: "image/jpeg" });
       setfile(croppedFile); // الآن فقط اعتمدنا الملف
       setIsCropping(false);
-      onStopCrop();
+      onStopCrop?.();
       toast.success("تم اعتماد الصورة");
     }
   } catch (e) {
@@ -131,6 +147,7 @@ const handleCropSave = async () => {
         Price: parseFloat(productPrice),
         Image: finalImagePath,
         category: productCategory,
+        options:variants,
         views:0 ,
         orders:0,
         status:'active'
@@ -223,7 +240,7 @@ const handleCropSave = async () => {
         <button 
           onClick={() => {
             setIsCropping(false);
-            onStopCrop();
+            onStopCrop?.();
             setTempFile(null);
             setFileInputKey(Date.now());
           }} 
@@ -334,7 +351,10 @@ const handleCropSave = async () => {
         <p className="text-xs text-gray-500 mb-2">
           مثال: اللون، الحجم، الماركة، أو أي معلومات إضافية
         </p>
-        <MoreInfo />
+        <MoreInfo
+  initialData={{ variants }}
+  setextra_payload={setextra_payload}
+/>
       </motion.div>
     )}
   </AnimatePresence>
@@ -365,18 +385,20 @@ const handleCropSave = async () => {
   </div>
  <div className="mt-auto pt-2">
       <button 
-        onClick={handleAction}
-        disabled={isUploading}
-        className={`w-full text-black p-4 rounded-xl font-extrabold text-sm "mt-auto pt-2 pb-[env(safe-area-inset-bottom) uppercase tracking-widest transition-all shadow-lg ${
-          isUploading ? 'bg-slate-200 cursor-not-allowed' : 'bg-primary hover:bg-[#b8952e] active:scale-95'
-        }`}
-      >
-        {isUploading ? (
-          <span className=" items-center justify-center gap-2">
-            <Loader2 className="animate-spin h-4 w-4" /> جاري الحفظ...
-          </span>
-        ) : isEditMode ? "تحديث المنتج" : "حفظ في السيرفر"}
-      </button>
+  onClick={handleAction}
+  disabled={isUploading}
+  // أضفنا flex و items-center و justify-center للتحكم الكامل في التمركز
+  className={`w-full flex items-center justify-center text-black p-4 rounded-xl font-extrabold text-sm uppercase tracking-widest transition-all shadow-lg ${
+    isUploading ? 'bg-slate-200 cursor-not-allowed' : 'bg-primary hover:bg-[#b8952e] active:scale-95'
+  }`}
+>
+  {isUploading ? (
+    <span className="flex items-center justify-center gap-2">
+      <Loader2 className="animate-spin h-4 w-4" /> جاري الحفظ...
+    </span>
+  ) : isEditMode ? "تحديث المنتج" : "حفظ في السيرفر"}
+</button>
+
       </div>
       
     </motion.div>

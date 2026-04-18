@@ -1,13 +1,14 @@
 "use client";
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 
+// تعريف أنواع البيانات
 interface CartContextType {
   cart: any[];
   setCart: React.Dispatch<React.SetStateAction<any[]>>;
   isOpenCart: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addToCart: (product: any) => void; // أضفت البارامتر هنا
+  addToCart: (product: any) => void;
 }
 
 export const CartContext = createContext<CartContextType>({
@@ -22,51 +23,59 @@ export const CartContext = createContext<CartContextType>({
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<any[]>([]);
   const [isOpenCart, setIsOpenCart] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false); // لمنع مسح البيانات عند أول تحميل
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // 1. تحميل البيانات عند البداية فقط
+  // 1. تحميل البيانات من localStorage عند تشغيل التطبيق
   useEffect(() => {
-    const data = localStorage.getItem("cart");
-    if (data) {
+    const savedCart = localStorage.getItem("cart");
+    if (savedCart) {
       try {
-        setCart(JSON.parse(data));
-      } catch (e) {
-        console.error("خطأ في قراءة بيانات السلة", e);
+        setCart(JSON.parse(savedCart));
+      } catch (error) {
+        console.error("Failed to parse cart data", error);
       }
     }
-    setIsInitialized(true); // نؤكد أننا انتهينا من التحميل الأولي
+    setIsInitialized(true);
   }, []);
 
-  // 2. الحفظ في الـ Storage فقط بعد التأكد من انتهاء التحميل الأولي
+  // 2. حفظ البيانات في localStorage كلما تغيرت السلة
   useEffect(() => {
     if (isInitialized) {
       localStorage.setItem("cart", JSON.stringify(cart));
     }
   }, [cart, isInitialized]);
 
+  // 3. وظيفة الإضافة للسلة الذكية
   const addToCart = (product: any) => {
-    const exists = cart.find((item) => item.id === product.id);
+    // الهوية الفريدة للمنتج (إما cartItemId الذي يحتوي على الخيارات أو id المنتج)
+    const uniqueId = product.cartItemId || product.id;
 
-    if (!exists) {
-      // نضيف المنتج مع كمية افتراضية 1
+    // البحث عما إذا كان المنتج "بنفس الخيارات" موجود مسبقاً
+    const existingItemIndex = cart.findIndex(
+      (item) => (item.cartItemId || item.id) === uniqueId
+    );
+
+    if (existingItemIndex !== -1) {
+      // السيناريو 1: المنتج موجود بنفس الخيارات، نحدث الكمية فقط
+      const updatedCart = [...cart];
+      const itemInCart = updatedCart[existingItemIndex];
+
+      // التأكد من عدم تجاوز المخزون المتاح لهذا الخيار
+      if (itemInCart.quantityCart < product.quantity) {
+        updatedCart[existingItemIndex] = {
+          ...itemInCart,
+          quantityCart: itemInCart.quantityCart + 1,
+        };
+        setCart(updatedCart);
+        openCart(); // فتح السلة لرؤية التحديث
+      } else {
+        alert("عذراً، لقد وصلت للحد الأقصى للمخزون المتوفر لهذا النوع.");
+      }
+    } else {
+      // السيناريو 2: المنتج غير موجود أو موجود بخيارات مختلفة
+      // يضاف كعنصر جديد تماماً
       setCart([...cart, { ...product, quantityCart: 1 }]);
       openCart();
-    } else {
-      
-      // إذا كان موجوداً، نزيد الكمية بدلاً من إظهار alert (أفضل لتجربة المستخدم)
- let showAlert=false;
-     const updated = cart.map(item =>
-  {if(item.id === product.id ) {
-    if( item.quantity < product.quantity){
-      return { ...item, quantity: (item.quantity || 1) + 1 };
-      
-    } else{showAlert=true;return item}
-    }else{ return item}}
-);
-if (showAlert) {
-  alert("وصلت للحد الأقصى");}
-      setCart(updated);
-    //  openCart();
     }
   };
 
@@ -74,7 +83,9 @@ if (showAlert) {
   const closeCart = () => setIsOpenCart(false);
 
   return (
-    <CartContext.Provider value={{ cart, setCart, isOpenCart, addToCart, openCart, closeCart }}>
+    <CartContext.Provider
+      value={{ cart, setCart, isOpenCart, addToCart, openCart, closeCart }}
+    >
       {children}
     </CartContext.Provider>
   );

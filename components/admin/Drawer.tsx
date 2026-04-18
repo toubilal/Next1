@@ -20,7 +20,7 @@ const [openIndex, setOpenIndex] = useState(null);
       path: "/products",
       icon: <Package size={20} />,
       children: [
-        { name: "إضافة منتج", path: "/products/add", icon: "📦" },
+        { name: "إضافة منتج", path: "/addproducts", icon: "📦" },
         { name: "إضافة صنف", path: "/products/category", icon: "🏷" },
       ],
     },
