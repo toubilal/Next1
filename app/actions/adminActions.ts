@@ -53,15 +53,68 @@ export async function getRecentOrders() {
       created_at,
       product_id,
       quantity, 
+      selectedOptions,
       customer_name,
       customer_phone,
       customer_address,
-      product:sys_data_node_77 ( Title, Image,quantity_all:quantity ) 
+      product:sys_data_node_77 (
+        Title, 
+        Image,
+        Price,
+        quantity_all:quantity,
+        extra_payload
+      ) 
     `)
     .order('created_at', { ascending: false });
 
+  if (error) return { data, error };
 
-  return { data, error };
+  const enrichedData = data.map((order) => {
+    const product = order.product;
+
+    let matchedPrice = product?.price ?? 0;
+    let matchedStock = product?.quantity_all ?? 0;
+
+    const selected = order.selectedOptions;
+    const variants = product?.extra_payload;
+
+    // ✅ فقط إذا selectedOptions ليست فارغة
+    if (
+      selected &&
+      typeof selected === "object" &&
+      Object.keys(selected).length > 0 &&
+      Array.isArray(variants)
+    ) {
+      const match = variants.find((v: any) => {
+        const options = v.options || {};
+
+        return Object.keys(selected).every(
+          (key) => selected[key] === options[key]
+        );
+      });
+
+      if (match) {
+        matchedPrice = match.price;
+        matchedStock = match.stock;
+      }
+    }
+
+    // نقوم باستخراج Price و quantity_all من الكائن الأصلي
+const { Price, quantity_all, ...restOfProduct } = product;
+
+return {
+  ...order,
+  product: {
+    ...product,            // نسخ جميع الحقول كما هي (Title, Image, Price, quantity_all, extra_payload)
+    Price: matchedPrice,        // تحديث قيمة Price الحالية
+    quantity_all: matchedStock  // تحديث قيمة quantity_all الحالية
+  },
+};
+
+
+  });
+
+  return { data: enrichedData, error };
 }
 
 // في ملف adminActions.js

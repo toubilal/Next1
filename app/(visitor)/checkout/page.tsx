@@ -23,13 +23,13 @@ export default function CheckoutPage() {
   
 
   const removeItem = (id: string | number) => {
-    const updated = cart.filter((item) => item.id !== id);
+    const updated = cart.filter((item) =>(item.cartItemId|| item.id )!== id);
     setCart(updated);
   };
 
   const updateQuantity = (id: string | number, delta: number) => {
     const updated = cart.map(item => {
-  if (item.id !== id) return item;
+  if ((item.cartItemId||item.id )!== id) return item;
 
   const currentQty = item.quantityCart || 1;
 
@@ -52,7 +52,8 @@ export default function CheckoutPage() {
     setCart(updated);
   };
 
-  const totalPrice = cart.reduce((total, item) => total + (Number(item.Price) * (item.quantity || 1)), 0);
+  
+  
 
   const handleConfirmOrder = async () => {
   setLoading(true);
@@ -114,7 +115,7 @@ if (result.success) {
               <p className="text-center text-gray-400 py-4 font-bold">السلة فارغة حالياً</p>
             ) : (
               cart.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 border-b pb-3 last:border-0 last:pb-0">
+                <div key={item.cartItemId || item.id} className="flex items-center gap-3 border-b pb-3 last:border-0 last:pb-0">
                   <div className="relative w-16 h-16 rounded-lg overflow-hidden border flex-shrink-0">
                     <Image
                       src={item.Image || "/placeholder.jpg"}
@@ -129,14 +130,14 @@ if (result.success) {
                     <div className="flex items-center justify-end gap-4 mt-2">
                       <p className="text-blue-600 font-black text-sm">{item.Price} د.ج</p>
                       <div className="flex items-center border rounded-lg overflow-hidden">
-                        <button onClick={() => updateQuantity(item.id, 1)} className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-xs font-bold">+</button>
+                        <button onClick={() => updateQuantity(item.cartItemId||item.id, 1)} className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-xs font-bold">+</button>
                         <span className="px-3 text-xs font-bold">{item.quantityCart || 1}</span>
-                        <button onClick={() => updateQuantity(item.id, -1)} className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-xs font-bold">-</button>
+                        <button onClick={() => updateQuantity(item.cartItemId||item.id, -1)} className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-xs font-bold">-</button>
                       </div>
                     </div>
                   </div>
 
-                  <button onClick={() => removeItem(item.id)} className="text-gray-300 hover:text-red-500 mr-2">
+                  <button onClick={() => removeItem(item.cartItemId||item.id)} className="text-gray-300 hover:text-red-500 mr-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                   </button>
                 </div>
@@ -192,7 +193,7 @@ if (result.success) {
         <div className="space-y-4">
           <div className="flex justify-between items-center px-2 flex-row-reverse">
             <span className="text-gray-500 font-bold">المجموع الكلي:</span>
-            <span className="text-2xl font-black text-green-700">{totalPrice} <span className="text-sm">د.ج</span></span>
+            <span className="text-2xl font-black text-green-700"> {cart.reduce((total, item) => total + (Number(item.Price) * (item.quantityCart || 1)), 0)} <span className="text-sm">د.ج</span></span>
           </div>
 
           <button 

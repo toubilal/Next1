@@ -77,7 +77,7 @@ export const ProductCard = ({
         ...product,
         cartItemId: `${product.id}-${selectedStorage}-${selectedColor}`,
         selectedOptions: { storage: selectedStorage, color: selectedColor },
-        Price: matchedVariant.price || product.Price, 
+        Price: matchedVariant.price , 
         quantity: matchedVariant.stock || 0
       };
 

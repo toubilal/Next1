@@ -15,13 +15,13 @@ export function Cart() {
   const { isOpenCart, closeCart, cart, setCart } = useContext(CartContext);
 
   const removeItem = (id: string | number) => {
-    const updated = cart.filter((item) => item.id !== id);
+    const updated = cart.filter((item) => (item.cartItemId||item.id) !== id);
     setCart(updated);
   };
 
   const updateQuantity = (id: string | number, delta: number) => {
     const updated = cart.map(item => {
-      if (item.id !== id) return item;
+      if ((item.cartItemId || item.id) !== id) return item;
       const currentQty = item.quantityCart || 1;
       if (delta > 0 && currentQty >= item.quantity) {
         showToast("وصلت للحد الأقصى", "error");
@@ -81,9 +81,9 @@ export function Cart() {
 
                   {/* 2. أزرار الكمية */}
                   <div className="flex flex-col justify-between h-16 w-8 bg-gray-50 rounded-lg border border-gray-100 overflow-hidden">
-                    <button onClick={() => updateQuantity(item.id, 1)} className="h-full flex items-center justify-center hover:bg-gray-200 text-gray-600 font-bold text-xs">+</button>
+                    <button onClick={() => updateQuantity(item.cartItemId||item.id, 1)} className="h-full flex items-center justify-center hover:bg-gray-200 text-gray-600 font-bold text-xs">+</button>
                     <span className="text-[10px] font-black text-center bg-white py-0.5 border-y border-gray-100">{item.quantityCart || 1}</span>
-                    <button onClick={() => updateQuantity(item.id, -1)} className="h-full flex items-center justify-center hover:bg-gray-200 text-gray-600 font-bold text-xs">-</button>
+                    <button onClick={() => updateQuantity(item.cartItemId||item.id, -1)} className="h-full flex items-center justify-center hover:bg-gray-200 text-gray-600 font-bold text-xs">-</button>
                   </div>
 
                   {/* 3. الاسم، الخيارات، والسعر */}
@@ -113,7 +113,7 @@ export function Cart() {
 
                   {/* 4. زر الحذف */}
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item.cartItemId||item.id)}
                     className="p-2 text-gray-300 hover:text-red-500 self-center"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

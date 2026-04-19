@@ -17,6 +17,7 @@ export async function submitOrderAction(cart, customerInfo) {
     product_id: item.id,
     customer_name: customerInfo.fullName,
     customer_phone: customerInfo.phone,
+    selectedOptions:item.selectedOptions,
     quantity: item.quantityCart || 1,
     customer_address: customerInfo.address,
     status: 'pending',             // الحالة الابتدائية: قيد الطلب

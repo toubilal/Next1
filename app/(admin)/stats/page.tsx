@@ -52,6 +52,7 @@ export default function StatsPage() {
             };
           }
           groups[groupKey].items.push({
+            
             id: order.id,
             product_id: order.product_id,
            
@@ -92,7 +93,7 @@ const handleClick = async (orderId, newStat, items = null) => {
   
 
   // دالة تحديث الكمية (تعمل الآن على allGroupedOrders)
-  const updateItemQuantity = async (orderId, productId, delta) => {
+  const updateItemQuantity = async (ID,orderId, productId, delta) => {
   // فحص فوري: إذا كان الـ Id مفقوداً، توقف واطبع تنبيهاً
  // console.error(orderId+'   '+productId+'   '+delta)
 
@@ -104,7 +105,7 @@ const handleClick = async (orderId, newStat, items = null) => {
     return {
       ...group,
       items: group.items.map(item => {
-        if (item.product_id === productId) {
+        if ((item.product_id === productId)&&item.id===ID) {
           const newQty = Math.max(1, (item.quantity || 1) + delta);
           return { ...item, quantity: newQty };
         }
@@ -320,7 +321,7 @@ const handleDelete = async (orderId, productId,id) => {
       {/* زر الناقص */}
       {group.status === 'pending' && (
         <button
-          onClick={() => updateItemQuantity(group.order_id, item.product_id, -1)}
+          onClick={() => updateItemQuantity(item.id,group.order_id, item.product_id, -1)}
           className="w-5 h-5 flex items-center justify-center text-red-500 font-bold hover:bg-red-50 rounded"
         >
           -
@@ -341,7 +342,7 @@ const handleDelete = async (orderId, productId,id) => {
       {/* زر الزائد */}
       {group.status === 'pending' && (
         <button
-          onClick={() => updateItemQuantity(group.order_id, item.product_id, 1)}
+          onClick={() => updateItemQuantity(item.id,group.order_id, item.product_id, 1)}
           className="w-5 h-5 flex items-center justify-center text-emerald-600 font-bold hover:bg-emerald-50 rounded"
         >
           +
