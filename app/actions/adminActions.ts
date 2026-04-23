@@ -26,7 +26,7 @@ export async function update_quantity_rpc(Id, newQuantity) {
 
 // في ملف الأكشن (Server Side)
 export async function handleConfirmOrder(orderId: string,  newStat: string,itemsToUpdate?:any) {
-  const { error } = await supabaseAdmin.rpc('update_order_final', {
+  const { error } = await supabaseAdmin.rpc('update_order_full', {
   order_id_input: orderId,
   status_input: newStat,
   items_input:itemsToUpdate

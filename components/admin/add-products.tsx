@@ -122,9 +122,14 @@ const handleCropSave = async () => {
   
 
   const handleAction = async () => {
-    if (!productName || !productPrice || !productCategory || (!isEditMode && !file)) {
-      return toast.error("يرجى إكمال البيانات");
-    }
+    if (
+  !productName ||
+  ((!isMoreOpen && variants) && !productPrice) ||
+  !productCategory ||
+  (!isEditMode && !file)
+) {
+  return toast.error("يرجى إكمال البيانات");
+}
 
     setIsUploading(true);
 
@@ -144,7 +149,7 @@ const handleCropSave = async () => {
 
       const productPayload = {
         Title: productName,
-        Price: parseFloat(productPrice),
+        Price: Number.parseFloat(productPrice) || 0,
         Image: finalImagePath,
         category: productCategory,
         options:variants,

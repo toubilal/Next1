@@ -52,7 +52,7 @@ export default function StatsPage() {
             };
           }
           groups[groupKey].items.push({
-            
+            selectedOptions:order.selectedOptions,
             id: order.id,
             product_id: order.product_id,
            
@@ -126,17 +126,17 @@ const handleDelete = async (orderId, productId,id) => {
   const res = await deleteId_order(id);
 
   if (res.success) {
-    removeItemFromOrder(orderId, productId);
+    removeItemFromOrder(orderId, id);
   } else {
     alert(res.error || "حدث خطأ");
   }
 };
 
   // دالة حذف منتج محدد
-  const removeItemFromOrder = (orderId, productId) => {
+  const removeItemFromOrder = (orderId, ID) => {
     setAllGroupedOrders(prev => prev.map(group => {
       if (group.order_id === orderId) {
-        return { ...group, items: group.items.filter(i => i.product_id !== productId) };
+        return { ...group, items: group.items.filter(i => i.id !== ID) };
       }
       return group;
     }).filter(group => group.items.length > 0));
@@ -151,16 +151,11 @@ const handleDelete = async (orderId, productId,id) => {
   };
 
   async function handleUpdateStatus(orderId, newStat, items) {
-  let itemsToUpdate = [];
+  
 
-  if (items) {
-    itemsToUpdate = items.map(item => ({
-      id: item.id,
-      quantity: item.quantity
-    }));
-  }
+  
 
-  const result = await handleConfirmOrder(orderId, newStat, itemsToUpdate);
+  const result = await handleConfirmOrder(orderId, newStat, items);
 
   if (result.error) {
     throw new Error(result.error);
@@ -289,20 +284,19 @@ const handleDelete = async (orderId, productId,id) => {
                 {group.items.map((item: any, idx: number) => (
   <div
     key={idx}
-    // يجب الحفاظ على 'relative' هنا لضمان عمل السحابة
     className={`relative flex items-center gap-2 text-[11px] p-1.5 rounded-xl transition-all duration-300 ${
-      item.quantity > item.product?.quantity_all ? "bg-red-100 mt-8" : "mt-2"
+      (item.quantity > item.product?.quantity_all && group.status === 'pending') 
+        ? "bg-red-100 mt-8" 
+        : "mt-2"
     }`}
   >
-    {/* --- بداية تعديل السحابة --- */}
-    {item.quantity > item.product?.quantity_all && (
-      <div className="absolute -top-7 right-1 z-50 bg-yellow-100 border border-yellow-300 text-yellow-800 text-[9px] px-2 py-1 rounded-md shadow-lg whitespace-nowrap animate-in fade-in slide-in-from-bottom-2">
+    {/* السحابة (باقي الكود الخاص بك هنا) */}
+    {item.quantity > item.product?.quantity_all && group.status === 'pending' && (
+      <div className="absolute -top-7 right-1 z-50 bg-yellow-100 border border-yellow-300 text-yellow-800 text-[9px] px-2 py-1 rounded-md shadow-lg whitespace-nowrap">
         ⚠️ الكمية غير متاحة
-        {/* الذيل المعكوس والمموضع على اليمين فوق الصورة */}
         <div className="absolute -bottom-1 right-2.5 w-2 h-2 bg-yellow-100 border-b border-r border-yellow-300 rotate-45"></div>
       </div>
     )}
-    {/* --- نهاية تعديل السحابة --- */}
 
     {/* صورة المنتج */}
     <img
@@ -316,52 +310,39 @@ const handleDelete = async (orderId, productId,id) => {
       {item.product?.Title || "منتج"}
     </span>
 
+    {/* الخيارات (التعديل الجديد هنا) */}
+    {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+      <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 text-[9px] text-slate-600 whitespace-nowrap">
+        <span>{item.selectedOptions.color}</span>
+        <span className="opacity-40">|</span>
+        <span>{item.selectedOptions.storage}</span>
+      </div>
+    )}
+
     {/* حاوية التحكم في الكمية */}
     <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-1">
-      {/* زر الناقص */}
       {group.status === 'pending' && (
-        <button
-          onClick={() => updateItemQuantity(item.id,group.order_id, item.product_id, -1)}
-          className="w-5 h-5 flex items-center justify-center text-red-500 font-bold hover:bg-red-50 rounded"
-        >
-          -
-        </button>
+        <button onClick={() => updateItemQuantity(item.id, group.order_id, item.product_id, -1)} className="w-5 h-5 flex items-center justify-center text-red-500 font-bold hover:bg-red-50 rounded"> - </button>
       )}
-
-      {/* رقم الكمية الحالي */}
-      <span
-        className={`font-black min-w-[20px] text-center px-1 ${
-          item.quantity > item.product?.quantity_all
-            ? "text-red-600"
-            : "text-blue-600"
-        }`}
-      >
+      <span className={`font-black min-w-[20px] text-center px-1 ${
+        (item.quantity > item.product?.quantity_all && group.status === 'pending') ? "text-red-600" : "text-blue-600"
+      }`}>
         x{item.quantity}
       </span>
-
-      {/* زر الزائد */}
       {group.status === 'pending' && (
-        <button
-          onClick={() => updateItemQuantity(item.id,group.order_id, item.product_id, 1)}
-          className="w-5 h-5 flex items-center justify-center text-emerald-600 font-bold hover:bg-emerald-50 rounded"
-        >
-          +
-        </button>
+        <button onClick={() => updateItemQuantity(item.id, group.order_id, item.product_id, 1)} className="w-5 h-5 flex items-center justify-center text-emerald-600 font-bold hover:bg-emerald-50 rounded"> + </button>
       )}
     </div>
 
     {/* زر الحذف */}
     {group.status === 'pending' && (
-      <button
-        onClick={() => handleDelete(group.order_id, item.product_id, item.id)}
-        className="p-1 text-slate-400 hover:text-red-500 transition-colors"
-        title="حذف المنتج من الطلب"
-      >
+      <button onClick={() => handleDelete(group.order_id, item.product_id, item.id)} className="p-1 text-slate-400 hover:text-red-500 transition-colors">
         <Trash2 size={14} />
       </button>
     )}
   </div>
 ))}
+
 
 
               </div>
@@ -400,7 +381,7 @@ const handleDelete = async (orderId, productId,id) => {
 
 {group.status !== 'canceled' && (
   <button
-    onClick={() => handleClick(group.order_id, 'canceled')}
+    onClick={() => handleClick(group.order_id, 'canceled',group.items)}
     className="flex items-center gap-1 bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs disabled:opacity-50"
     disabled={loadingProcess.id }// يتجمد عند الضغط على تأكيد أيضاً
   >

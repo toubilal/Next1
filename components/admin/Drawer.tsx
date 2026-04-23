@@ -189,26 +189,61 @@ const toggle = (index) => {
           {/* قائمة المنتجات داخل هذه السلة */}
           <div className="space-y-2 border-t border-dashed border-slate-200 pt-3">
             {order.items.map((item: any, idx: number) => (
-              <div key={idx} className={`flex items-center gap-3 p-2 rounded-xl border ${
-                item.is_seen ? "bg-white/50 border-slate-50" : "bg-white border-blue-100"
-              }`}>
-                {/* صورة المنتج */}
-                <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100">
-                  {item.product?.Image ? (
-                    <img src={item.product.Image} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[8px] text-slate-300 uppercase">N/A</div>
-                  )}
-                </div>
-                {/* تفاصيل المنتج */}
-                <div className="flex-1 text-right">
-                  <p className="text-[11px] font-bold text-slate-700 line-clamp-1">
-                    {item.product?.Title || "منتج غير معروف"}
-                  </p>
-                  <p className="text-[10px] text-blue-600 font-medium">الكمية: {item.quantity}</p>
-                </div>
-              </div>
-            ))}
+  <div
+    key={idx}
+    className={`flex items-center gap-3 p-2 rounded-xl border ${
+      item.is_seen
+        ? "bg-white/50 border-slate-50"
+        : "bg-white border-blue-100"
+    }`}
+  >
+    {/* صورة المنتج */}
+    <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100">
+      {item.product?.Image ? (
+        <img
+          src={item.product.Image}
+          alt=""
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-[8px] text-slate-300 uppercase">
+          N/A
+        </div>
+      )}
+    </div>
+
+    {/* تفاصيل المنتج */}
+    <div className="flex-1 text-right">
+      <p className="text-[11px] font-bold text-slate-700 line-clamp-1">
+        {item.product?.Title || "منتج غير معروف"}
+      </p>
+
+      <p className="text-[10px] text-blue-600 font-medium">
+        الكمية: {item.quantity}
+      </p>
+
+      {item.product?.selectedOptions &&
+        Object.keys(item.product.selectedOptions).length > 0 && (
+          <div className="mt-1 inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5 text-[10px] text-slate-700">
+            
+            {item.product.selectedOptions.color && (
+              <span>{item.product.selectedOptions.color}</span>
+            )}
+
+            {item.product.selectedOptions.color &&
+              item.product.selectedOptions.storage && (
+                <span className="opacity-40">•</span>
+              )}
+
+            {item.product.selectedOptions.storage && (
+              <span>{item.product.selectedOptions.storage}</span>
+            )}
+
+          </div>
+        )}
+    </div>
+  </div>
+))}
           </div>
 
           {/* عنوان التوصيل */}
