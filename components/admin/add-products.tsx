@@ -1,15 +1,16 @@
 'use client'
 
 import React, { useState, useEffect } from "react"
+import { SUPABASE_STORAGE_URL } from "@/components/constants/index"; 
 import {MoreInfo} from '@/components/admin/more-informations'
 import { motion,AnimatePresence } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import Cropper from 'react-easy-crop'
-import {addProductAction,updateProductAction} from'@/app/actions/adminActions'
-import { Loader2, Plus, Image as ImageIcon, X, Edit3 } from "lucide-react"
+import {addProductAction,uploadImageAction,updateProductAction} from'@/app/actions/adminActions'
+import { Loader2, Plus, Image as ImageIcon, X,Trash2, Edit3 } from "lucide-react"
 
 import { supabase } from '@/app/supabaseClient'
-import { uploadImageAction } from '@/app/actions'
+//import { uploadImageAction } from '@/app/actions'
 import { getCroppedImg } from '@/utils/cropImage'
 
 interface AddProductsProps {
@@ -78,16 +79,51 @@ const setextra_payload = (payload: any) => {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    if (initialData) {
-      setProductName(initialData.Title || "");
-      setProductPrice(initialData.Price?.toString() || "");
-      setproductCategory(initialData.category || "");
-    } else {
-      setProductName("");
+  if (initialData) {
+    const {
+      Title = "",
+      category = "",
+      extra_payload = [],
+      field_desc = "",
+      Price = "",
+      Image = "" // استخراج اسم الصورة
+    } = initialData;
+
+    // 2. تحديث الحالات البسيطة
+    setProductName(Title);
+    setproductCategory(category);
+    setProductDescription(field_desc);
+    setVariants(extra_payload);
+
+    // 3. التحقق من وجود متغيرات (Variants) وتحديد حالة السعر
+    const hasVariants = extra_payload && Object.keys(extra_payload).length > 0;
+    if (hasVariants) {
       setProductPrice("");
-      setproductCategory("");
+      setIsMoreOpen(true);
+    } else {
+      setProductPrice(Price?.toString() || "");
+      setIsMoreOpen(false);
     }
-  }, [initialData]);
+
+    // 4. معالجة عرض الصورة
+    if (Image) {
+      // تحويل اسم الملف إلى رابط كامل للعرض في الـ img tag
+      // تأكد من استيراد SUPABASE_STORAGE_URL من ملف الثوابت
+      setImageSrc(`${SUPABASE_STORAGE_URL}${Image}`);
+    } else {
+      setImageSrc("");
+    }
+    
+  } else {
+    // حالة إضافة منتج جديد (Reset)
+    setProductName("");
+    setProductPrice("");
+    setproductCategory("");
+    setProductDescription("");
+    setImageSrc(""); // تصفير الصورة
+  }
+}, [initialData]);
+
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
   if (e.target.files && e.target.files.length > 0) {
@@ -122,69 +158,88 @@ const handleCropSave = async () => {
   
 
   const handleAction = async () => {
-    if (
-  !productName ||
-  ((!isMoreOpen && variants) && !productPrice) ||
-  !productCategory ||
-  (!isEditMode && !file)
-) {
-  return toast.error("يرجى إكمال البيانات");
-}
+  // 1. التحقق من البيانات (Validation)
+  const isMissingPrice = !isMoreOpen && !productPrice;
+  const isMissingImage = !imageSrc; // imageSrc هو الرابط الكامل للصورة
 
-    setIsUploading(true);
+  if (!productName || !productCategory || isMissingPrice || isMissingImage) {
+    return toast.error("يرجى التأكد من ملء جميع الحقول المطلوبة (الاسم، التصنيف، السعر، والصورة)");
+  }
 
-    try {
-      let finalImagePath = initialData?.Image || "";
+  setIsUploading(true);
 
-      if (file) {
-        const fileName = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
-        const pathForDb = `/uploads/${fileName}`;
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('path', pathForDb);
-        const uploadResult = await uploadImageAction(formData);
-        if (!uploadResult.success) throw new Error("فشل رفع الصورة");
-        finalImagePath = pathForDb;
-      }
+  try {
+    // 2. تحديد مسار الصورة النهائي
+    let finalImagePath = initialData?.Image || ""; // نبدأ بالاسم القديم (إذا كان في وضع التعديل)
 
-      const productPayload = {
-        Title: productName,
-        Price: Number.parseFloat(productPrice) || 0,
-        Image: finalImagePath,
-        category: productCategory,
-        options:variants,
-        views:0 ,
-        orders:0,
-        status:'active'
-      };
-
-      if (isEditMode) {
-        const { data, error } = await updateProductAction(initialData.id,productPayload);
-
-        if (error) {throw error;
-      } else{ toast.success("تم تحديث المنتج بنجاح! ✏️");
-       hideDrawer(data[0]);}
-           } else {
-        const { data, error } = await addProductAction(productPayload);
-
-        if (error) throw error;
-        toast.success("تمت الإضافة بنجاح! 🎉");
-        if (onProductAdded) onProductAdded(data[0]);
-      }
-
-      if (!isEditMode) {
-        setProductName("");
-        setProductPrice("");
-        setproductCategory("");
-        setfile(null);
-        setFileInputKey(Date.now());
-      }
-    } catch (err: any) {
-      toast.error("حدث خطأ: " + err.message);
-    } finally {
-      setIsUploading(false);
+    // إذا قام المستخدم باختيار ملف جديد، نقوم برفعه
+    if (file) {
+      const fileName = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
+      
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('path', fileName); // نرسل الاسم الجديد
+      
+      const uploadResult = await uploadImageAction(formData);
+      if (!uploadResult.success) throw new Error("فشل رفع الصورة إلى Supabase");
+      
+      finalImagePath = fileName; // نحدث المسار بالاسم الجديد
+    } else if (!imageSrc) {
+      // إذا قام المستخدم بحذف الصورة (imageSrc أصبح فارغاً)
+      finalImagePath = ""; 
     }
-  };
+
+    // 3. بناء جسم الطلب (Payload)
+    const productPayload = {
+      Title: productName,
+      Price: !isMoreOpen ? (Number.parseFloat(productPrice) || 0) : 0,
+      Image: finalImagePath, // اسم الملف الجديد أو القديم أو فارغ
+      category: productCategory,
+      options: variants,
+      status: 'active'
+    };
+
+    // 4. تنفيذ العملية (Edit vs Add)
+    if (isEditMode) {
+      // نرسل الـ id، والبيانات، واسم الصورة القديمة (initialData.Image)
+      // الدالة التي كتبناها سابقاً ستتولى حذف القديمة إذا تغيرت
+      const { data, error } = await updateProductAction(initialData.id, productPayload, initialData.Image);
+      
+      if (error) throw new Error(error);
+      
+      toast.success("تم تحديث المنتج بنجاح! ✏️");
+      hideDrawer(data[0]);
+    } else {
+      // إضافة منتج جديد
+      const { data, error } = await addProductAction(productPayload);
+      if (error) throw new Error(error);
+      
+      toast.success("تمت الإضافة بنجاح! 🎉");
+      if (onProductAdded) onProductAdded(data[0]);
+      
+      // تصفير الحقول
+      setProductName("");
+      setProductPrice("");
+      setproductCategory("");
+      setImageSrc(null);
+      setfile(null);
+      setFileInputKey(Date.now());
+    }
+
+  } catch (err: any) {
+    console.error("Action Error:", err);
+    toast.error("خطأ: " + (err.message || "فشل في تنفيذ العملية"));
+  } finally {
+    setIsUploading(false);
+  }
+};
+
+
+const handleReset = () => {
+  setImageSrc(null); // مسح الصورة من المعاينة
+  setTempFile(null); // مسح الملف المخزن
+  // اختياري: يمكنك إضافة كود لتصفير الـ input إذا لزم الأمر
+};
 
   return (
    <motion.div 
@@ -205,12 +260,39 @@ const handleCropSave = async () => {
  
       <div className="space-y-4 space-y-2">
         <label className="text-sm font-medium">صورة المنتج:</label>
-        <input 
-          type="file" 
-          onChange={onFileChange} 
-          key={fileInputKey}
-          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-        />
+         {!imageSrc ? (
+    <input 
+      type="file" 
+      onChange={onFileChange} 
+      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+    />
+  ) : (
+    /* إذا كانت هناك صورة، أظهر المعاينة مع زر الحذف */
+    <div className="relative w-16 h-16 shrink-0 group">
+      <img 
+        src={imageSrc} 
+        alt="Preview" 
+        className="w-full h-full object-cover rounded-lg border border-slate-200 shadow-sm"
+      />
+      {/* زر الحذف الذي يظهر عند 
+      تمرير الماوس */}
+      
+      <button 
+    onClick={handleReset}
+    className="absolute -top-2 -right-2 bg-white/70 backdrop-blur-sm text-red-500 rounded-full p-1 
+               shadow-md border border-slate-200 
+               opacity-0 group-hover:opacity-100 
+               transition-all duration-300 ease-in-out
+               hover:bg-red-50 hover:text-red-600 hover:scale-110
+               focus:outline-none focus:ring-2 focus:ring-red-300"
+    title="إزالة الصورة"
+  >
+    {/* تأكد من استيراد { Trash2 } من 'lucide-react' */}
+    <Trash2 size={16} strokeWidth={2.5} />
+  </button>
+    
+    </div>
+  )}
 
         {isCropping && (
   <div className="fixed inset-0 z-[100] bg-black flex flex-col">
@@ -294,7 +376,7 @@ const handleCropSave = async () => {
 <textarea 
   placeholder="وصف المنتج" 
   className="w-full p-3 border border-slate-300 rounded-xl bg-white text-black outline-none transition-all shadow-sm focus:border-primary h-24 resize-none"
-  value={productDescription}
+  vvalue={productDescription || ""}
   onChange={(e) => setProductDescription(e.target.value)}
 />
 

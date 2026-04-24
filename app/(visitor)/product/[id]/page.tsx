@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from 'next/link';
 import Image from "next/image";
 import { supabase } from "@/app/supabaseClient";
+import { SUPABASE_STORAGE_URL } from "@/components/constants/index";
 import {incrementViewAction}  from '@/app/supaBase'
 import {CartContext} from '@/context/CartContext'
 
@@ -14,8 +15,9 @@ export default function ProductDetailsView() {
   const [loading, setLoading] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
     const fetchProduct = async () => {
+      // 1. التأكد من أننا في بيئة المتصفح
       if (typeof window === "undefined") return;
 
       const pathParts = window.location.pathname.split("/");
@@ -27,72 +29,69 @@ export default function ProductDetailsView() {
         return;
       }
 
-      // ✅ تسجيل المشاهدة (الإضافة هنا فقط)
-      
-      // الحصول على تاريخ اليوم (مثلاً: 2026-03-25)
-const today = new Date().toISOString().split('T')[0];
+      // 2. منطق تسجيل المشاهدة اليومي (مرة واحدة فقط)
+      const today = new Date().toISOString().split('T')[0];
+      const storageKey = `view_log_${productId}`;
+      const lastViewDate = localStorage.getItem(storageKey);
 
-// إنشاء "قفل" فريد لهذا المنتج بالذات
-const storageKey = `view_log_${productId}`; 
+      if (lastViewDate !== today) {
+        const { error } = await incrementViewAction(productId);
+        if (!error) {
+          localStorage.setItem(storageKey, today);
+        } else {
+          console.error("View Count Error:", error.message);
+        }
+      }
 
-// قراءة حالة القفل: هل فُتح اليوم؟
-const lastViewDate = localStorage.getItem(storageKey);
+      // 3. جلب بيانات المنتج
+      const { data, error } = await supabase.rpc('get_product_by_id', { 
+        p_id: productId 
+      });
 
-if (lastViewDate !== today) {
-    // إذا وصلنا هنا، فهذا يعني أن هذا الـ ID لم يُسجل لهذا اليوم (today)
-    const { error } = await incrementViewAction(productId);
+      if (error) {
+        console.error("Error fetching product:", error.message);
+        setLoading(false);
+        return;
+      }
 
-    if (!error) {
-        // نحدث القفل ونربطه بتاريخ اليوم
-        localStorage.setItem(storageKey, today);
-    }else{console.error(error.message)}
-}
+      if (data && data.length > 0) {
+        const rawProduct = data[0];
+        
+        // معالجة رابط الصورة للمنتج الرئيسي
+        const mainProduct = {
+          ...rawProduct,
+          Image: rawProduct.Image ? `${SUPABASE_STORAGE_URL}${rawProduct.Image}` : null
+        };
+        
+        setProduct(mainProduct);
 
-      
-      
-   /*   await supabase.rpc("increment_product_view_alll", {
-        p_product_id: productId,
-      });*/
+        // 4. جلب المنتجات ذات الصلة
+        const { data: similar, error: relatedError } = await supabase.rpc('get_related_products', { 
+          p_category: mainProduct.category, 
+          p_exclude_id: productId,
+          p_limit: 4 
+        });
 
-      // جلب المنتج
-      const { data ,error} = await supabase.rpc('get_product_by_id', { 
-  p_id: productId  // يجب أن يطابق الاسم p_id الموجود في الدالة أعلاه
-});
-let mainProduct = null; // استخدام let بدلاً من Var (للممارسات الأفضل)
+        if (relatedError) {
+          console.error("Error fetching related products:", relatedError.message);
+        } else if (similar) {
+          // معالجة روابط الصور للمنتجات ذات الصلة
+          const similarWithUrls = similar.map((item) => ({
+            ...item,
+            Image: item.Image ? `${SUPABASE_STORAGE_URL}${item.Image}` : null
+          }));
+          setRelated(similarWithUrls);
+        }
+      } else {
+        console.warn("No product found with this ID");
+      }
 
-if (error) {
-    console.error("Error fetching product:", error.message);
-} else if (data && data.length > 0) {
-    // جلب المنتج الأول من المصفوفة
-    mainProduct = data[0];
-    console.log("Product Details:", mainProduct);
-    
-    // تحديث حالة المنتج الأساسي
-    setProduct(mainProduct);
 
-    // استدعاء المنتجات ذات الصلة
-    const { data: similar, error: relatedError } = await supabase.rpc('get_related_products', { 
-        p_category: mainProduct.category, 
-        p_exclude_id: productId,
-        p_limit: 4 
-    });
-
-    if (relatedError) {
-        console.error("Error fetching related products:", relatedError.message);
-    } else {
-        console.log("Related products found:", similar.length); // تم التصحيح هنا من data إلى similar
-        setRelated(similar);
-    }
-} else {
-    console.warn("No product found with this ID");
-}
-
-setLoading(false);
-
+      setLoading(false);
     };
 
     fetchProduct();
-  }, []);
+  }, []); 
 
   // 1. حالة التحميل (بدلاً من أي رسائل نصية)
   if (loading) {

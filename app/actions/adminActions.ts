@@ -212,22 +212,38 @@ export async function addProductAction(payload: any) {
   return { error: error?.message, data };
 }
 
-// 2. تحديث منتج
-export async function updateProductAction(id: number, payload: any) {
+// 2. تحديث منتج مع استبدال الصورة (حذف القديمة ووضع الجديدة)
+export async function updateProductAction(id: number, payload: any, oldImageName: string | null) {
+  
+  // 1. منطق الاستبدال: إذا كانت هناك صورة جديدة واسم مختلف عن القديمة
+  if (payload.Image && oldImageName && payload.Image !== oldImageName) {
+    const { error: storageError } = await supabaseAdmin.storage
+      .from('products')
+      .remove([oldImageName]); // حذف الصورة القديمة
+
+    if (storageError) {
+      console.error("خطأ أثناء حذف الصورة القديمة:", storageError.message);
+      // يمكنك هنا إرجاع خطأ أو الاستمرار حسب رغبتك
+    }
+  }
+
+  // 2. التحديث في قاعدة البيانات
   const { data, error } = await supabaseAdmin
     .from('sys_data_node_77')
     .update({
         "Title": payload.Title,
         "Price": payload.Price,
+        "Image": payload.Image, // هذا هو اسم الصورة الجديدة
         field_desc: payload.Description,
         extra_payload: payload.options,
-        // أضف بقية الحقول التي تريد تحديثها
+        // أضف بقية الحقول...
     })
     .eq('id', id)
     .select();
 
   return { error: error?.message, data };
 }
+
 //حذف منتج من السلة
 export async function deleteId_order(id: string) {
   const { error } = await supabaseAdmin
@@ -242,15 +258,30 @@ export async function deleteId_order(id: string) {
   return { success: true };
 }
 
-// 3. حذف منتج
-export async function deleteProductAction(id: number) {
-  const { error } = await supabaseAdmin
+// 3. حذف منتج (بأفضل أداء: حذف مباشر بدون جلب)
+export async function deleteProductAction(id: number, imageName?: string) {
+  
+  // 1. حذف الصورة من التخزين (إذا كان هناك اسم صورة)
+  if (imageName) {
+    const { error: storageError } = await supabaseAdmin.storage
+      .from('products')
+      .remove([imageName]);
+      
+    if (storageError) {
+      console.error("خطأ أثناء حذف الصورة:", storageError.message);
+      // يمكنك هنا اختيار إيقاف الحذف إذا فشل حذف الصورة، أو الاستمرار
+    }
+  }
+
+  // 2. حذف المنتج من قاعدة البيانات
+  const { error: deleteError } = await supabaseAdmin
     .from('sys_data_node_77')
     .delete()
     .eq('id', id);
   
-  return { error: error?.message };
+  return { error: deleteError?.message };
 }
+
 //حذف السلة
 export async function deleteOrder(orderId) {
   try {
@@ -338,4 +369,26 @@ export async function updateProductStatus(id, nextStatus) {
   } catch (err) {
     return { success: false, message: "خطأ في السيرفر" };
   }
+}
+
+// ... استيراداتك المعتادة
+
+export async function uploadImageAction(formData: FormData) {
+  const file = formData.get('image') as File;
+  const fileName = formData.get('path') as string; // هذا الآن يمثل اسم الملف فقط
+
+  // نستخدم supabaseAdmin الذي أنشأناه سابقاً
+  const { data, error } = await supabaseAdmin.storage
+    .from('products') // اسم الـ Bucket الذي أنشأته في Supabase
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: true, // لتحديث الصورة إذا تغيرت
+    });
+
+  if (error) {
+    console.error("Supabase Storage Error:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, path: data.path }; // data.path هنا سيكون هو اسم الملف
 }

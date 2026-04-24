@@ -7,6 +7,7 @@ import { supabase } from '@/app/supabaseClient'
 import {CategoryBar} from'@/components/store/CategoryBar'
 import { useProductStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
+import { SUPABASE_STORAGE_URL } from "@/components/constants/index"; 
 
 export default function VisitorPage() {
   const [products, setProducts] = useState([])
@@ -24,18 +25,27 @@ const handleProductClick = (product: any) => {
 router.push(`/product/${product.id}`);};
   
   const fetchProducts = async () => {
-    try {
-      setLoading(true)
-      const { data, error } = await supabase.rpc('get_public_products');
-      if (error) throw error;
-      setProducts(data)
-    } catch (error) {
-      console.error('Error fetching products:', error.message)
-    } finally {
-      setLoading(false)
-    }
-    
+  try {
+    setLoading(true);
+    const { data, error } = await supabase.rpc('get_public_products');
+    if (error) throw error;
+
+    // معالجة البيانات وإضافة الرابط الكامل للصور
+    const processedData = data.map((product) => ({
+      ...product,
+      // إذا كان هناك اسم صورة، ندمجه مع الرابط الأساسي، وإلا نضع صورة افتراضية
+      Image: product.Image 
+        ? `${SUPABASE_STORAGE_URL}${product.Image}` 
+        : "/placeholder.png" // تأكد من وجود هذه الصورة في مجلد public
+    }));
+
+    setProducts(processedData);
+  } catch (error) {
+    console.error('Error fetching products:', error.message);
+  } finally {
+    setLoading(false);
   }
+}
   const [selectedCategory, setSelectedCategory] = useState("الكل");
 
 // 2. استخراج الأصناف من المنتجات التي جلبتها من Supabase

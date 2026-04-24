@@ -1,10 +1,12 @@
 'use client'
 import { motion,AnimatePresence } from 'framer-motion'
 import { useState,useRef } from "react";
+import { Trash2 } from 'lucide-react'; 
 import { useEffect } from "react";
 import FloatingMenu from '@/components/layout/FloatingMenu';
 interface moreInfoPropos{
   setextra_payload:(payload:any)=>void;
+  
   initialData?: {
     variants?: any[];
     storages?: string[];
@@ -99,6 +101,9 @@ const updateVariant = (index, field, value) => {
     )
   );
 };
+const removeVariant = (index) => {
+  setVariants(variants.filter((_, i) => i !== index));
+};
 
 const handleSubmit = () => { console.log({ variants }); alert("Check console"); };
 
@@ -191,27 +196,49 @@ return ( <div className="max-w-4xl mx-auto">
                   </tr>
                 </thead>
                 <tbody>
-                  <AnimatePresence>
+                  
                     {variants.map((v, i) => (
-                      <motion.tr
-                        layout
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        key={`${v.storage}-${v.color}`} // مفتاح فريد لضمان حركة الصفوف
-                        className="border-t border-slate-200"
-                      >
-                        <td className="p-3">{v.storage}</td>
-                        <td className="p-3">{v.color}</td>
-                        <td className="p-3">
-                          <input type="number" value={v.stock} onChange={(e) => updateVariant(i, "stock", e.target.value)} className="border p-2 rounded-lg w-20" />
-                        </td>
-                        <td className="p-3">
-                          <input type="number" value={v.price} onChange={(e) => updateVariant(i, "price", e.target.value)} className="border p-2 rounded-lg w-20" />
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                </tbody>
+   <motion.tr
+    layout
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, x: -10 }}
+    key={`${v.storage}-${v.color}-${i}`}
+    className="border-t border-slate-200 hover:bg-slate-50 transition-colors"
+  >
+    <td className="p-3">{v.storage}</td>
+    <td className="p-3">{v.color}</td>
+    <td className="p-3">
+      <input 
+        type="number" 
+        value={v.stock} 
+        onChange={(e) => updateVariant(i, "stock", e.target.value)} 
+        className="border p-2 rounded-lg w-20" 
+      />
+    </td>
+    <td className="p-3">
+      <input 
+        type="number" 
+        value={v.price} 
+        onChange={(e) => updateVariant(i, "price", e.target.value)} 
+        className="border p-2 rounded-lg w-20" 
+      />
+    </td>
+    {/* إضافة زر الحذف */}<td className="p-3 text-center">
+      <button 
+        onClick={() => removeVariant(i)}
+        className="p-2 text-red-400 transition-all duration-200 rounded-lg hover:bg-red-50 hover:text-red-600 hover:scale-105"
+        title="حذف"
+      >
+        <Trash2 size={18} strokeWidth={2} />
+      </button>
+    </td>
+  
+    
+  </motion.tr>
+))}
+
+                  </tbody>
               </table>
             </div>
           </motion.div>

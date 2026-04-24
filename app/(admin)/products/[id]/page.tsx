@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { SUPABASE_STORAGE_URL } from "@/components/constants/index";
 import Link from 'next/link';
 import Image from "next/image";
 import { supabase } from "@/app/supabaseClient";
@@ -25,7 +26,6 @@ const hideDrawer = (newProduct:[]) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // 1. استخراج الـ ID من الرابط
       if (typeof window === "undefined") return;
       const pathParts = window.location.pathname.split("/");
       const idStr = pathParts[pathParts.length - 1];
@@ -36,17 +36,32 @@ const hideDrawer = (newProduct:[]) => {
         return;
       }
 
-      // 2. جلب المنتج
-      const { data: mainProduct,error } = await getAdminProductById(productId);
-if (error) console.error(error)
+      // 1. جلب المنتج
+      const { data: mainProduct, error } = await getAdminProductById(productId);
+      if (error) console.error(error);
+
       if (mainProduct) {
-        setProduct(mainProduct);
-        // جلب المنتجات ذات الصلة
-        const { data: similar } = await getFullCategoryProducts(mainProduct.category,productId)
-        if (similar) setRelated(similar);
+        // [تعديل هنا]: تحويل اسم الملف إلى رابط كامل ليتم عرضه في الـ Img
+        const productWithUrl = {
+          ...mainProduct,
+          Image: mainProduct.Image ? `${SUPABASE_STORAGE_URL}${mainProduct.Image}` : null
+        };
+        setProduct(productWithUrl);
+
+        // 2. جلب المنتجات ذات الصلة
+        const { data: similar } = await getFullCategoryProducts(mainProduct.category, productId);
+        
+        if (similar) {
+          // [تعديل هنا]: تطبيق التحويل على مصفوفة المنتجات ذات الصلة
+          const similarWithUrls = similar.map(item => ({
+            ...item,
+            Image: item.Image ? `${SUPABASE_STORAGE_URL}${item.Image}` : null
+          }));
+          setRelated(similarWithUrls);
+        }
       }
 
-      // 3. جلب التصنيفات لـ Drawer التعديل
+      // 3. جلب التصنيفات
       const { data: cats } = await supabase.from('Products').select('category');
       if (cats) {
         const unique = Array.from(new Set(cats.map(c => c.category))) as string[];
@@ -58,6 +73,7 @@ if (error) console.error(error)
 
     fetchData();
   }, []);
+
 
   if (loading) {
     return (

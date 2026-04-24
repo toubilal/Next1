@@ -1,5 +1,6 @@
 'use client' 
 import { useEffect, useState } from 'react'
+import { SUPABASE_STORAGE_URL } from "@/components/constants/index";
 import { Plus,Edit3 ,X,Heart, ShoppingBag, Star } from "lucide-react"
 import FloatingMenu from '@/components/layout/FloatingMenu';
 import {deleteImageFile} from '@/app/actions.ts'
@@ -20,6 +21,7 @@ const stopCropping = () => setIsCropping(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [products, setProducts] = useState([]) // مخزن للمنتجات
   const [loading, setLoading] = useState(true) // حالة التحميل
+const router = useRouter();
 const myActions = [
     { icon: '🏷️' ,label:'إضافة صنف',onClick: () => console.log('إضافة منتج') },
     { icon: '📦', label:'اضافة منتج',onClick: () => {setEditingProduct(null); setIsDrawerOpen(true); 
@@ -53,30 +55,31 @@ setIsDrawerOpen(false);
 }
 
 
-const router = useRouter();
+
 const handleProductClick = (product: any) => {
 router.push(`/products/${product.id}`);};
 // دالة الحذف
-const handleDelete = async (id, title,Image) => {
+const handleDelete = async (id, title, Image) => {
   // نافذة التأكيد
   const confirmDelete = window.confirm(`هل أنت متأكد من حذف منتج: ${title}؟`);
   
   if (confirmDelete) {
     try {
-      const { error } = await deleteProductAction(id);// الحذف بناءً على المعرف الفريد للمنتج
-  if (error) {throw error;} else{
-  await deleteImageFile(Image)
-  
+      // نرسل الـ id والـ Image معاً في طلب واحد للسيرفر
+      const { error } = await deleteProductAction(id, Image);
+      
+      if (error) throw new Error(error);
 
-      // تحديث الشاشة فوراً بفلترة المصفوفة وحذف المنتج منها
+      // تحديث الشاشة فوراً
       setProducts(products.filter(product => product.id !== id));
-      toast.success("تم حذف المنتج بنجاح");}
+      toast.success("تم حذف المنتج والصورة بنجاح");
       
     } catch (error) {
       toast.error("فشل الحذف: " + error.message);
     }
   }
 };
+
 
 const handleUpdateStatus = async (id, nextStatus) => {
   const res = await updateProductStatus(id, nextStatus);
@@ -102,20 +105,27 @@ const addNewProductLocally = (newProduct) => {
 
   // دالة جلب البيانات من Supabase
   const fetchProducts = async () => {
-    try {
-      setLoading(true)
-      const { data, error } = await getAllProductsForAdmin();
+  try {
+    setLoading(true);
+    const { data, error } = await getAllProductsForAdmin();
 
-     
-      
-      if (error) throw error
-      setProducts(data)
-    } catch (error) {
-      console.error('Error fetching Products:', error.message)
-    } finally {
-      setLoading(false)
-    }
+    if (error) throw error;
+
+    // معالجة البيانات: دمج الرابط الأساسي مع اسم الصورة لكل منتج
+    const productsWithUrls = data.map((product) => ({
+      ...product,
+      // تأكد أن SUPABASE_STORAGE_URL معرف لديك في ملف الثوابت
+      Image: product.Image ? `${SUPABASE_STORAGE_URL}${product.Image}` : null
+    }));
+
+    setProducts(productsWithUrls);
+  } catch (error) {
+    console.error('Error fetching Products:', error.message);
+  } finally {
+    setLoading(false);
   }
+};
+
 // 1. حالة الصنف المختار (الافتراضي: الكل)
 const [selectedCategory, setSelectedCategory] = useState("الكل");
 
