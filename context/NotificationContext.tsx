@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { SUPABASE_STORAGE_URL } from "@/components/constants/index"; 
 import { supabase } from '@/app/supabaseClient';
 
 export const NotificationContext = createContext(null);
@@ -12,7 +13,7 @@ export const NotificationProvider = ({ children }) => {
   const isFirstLoad = useRef(true);
 
   // 1. جلب الطلبات
-  const refreshOrders = useCallback(async () => {
+    const refreshOrders = useCallback(async () => {
     const { data, error } = await supabase.rpc('get_full_pending_orders');
 
     if (error) {
@@ -20,24 +21,29 @@ export const NotificationProvider = ({ children }) => {
       return;
     }
 
-    console.log("RPC Data:", data);
+    // معالجة البيانات وإضافة رابط الصورة الكامل هنا
+    const processedData = Array.isArray(data) ? data.map(order => ({
+      ...order,
+      items: order.items?.map(item => ({
+        ...item,
+        product: item.product ? {
+          ...item.product,
+          // دمج الرابط هنا
+          Image: item.product.Image ? `${SUPABASE_STORAGE_URL}${item.product.Image}` : null
+        } : null
+      }))
+    })) : [];
 
-    const rawData = data;
+    setOrders(processedData);
 
+    // نستخدم processedData لحساب الـ unreadCount
+    const totalUnread = processedData.reduce((acc, order) =>
+      acc + (order.items?.filter(item => !item.is_seen)?.length || 0)
+    , 0);
 
-    if (Array.isArray(rawData)) {
-      setOrders(rawData);
-
-      const totalUnread = rawData.reduce((acc, order) =>
-        acc + (order.items?.filter(item => !item.is_seen)?.length || 0)
-      , 0);
-
-      setUnreadCount(totalUnread);
-    } else {
-      setOrders([]);
-      setUnreadCount(0);
-    }
+    setUnreadCount(totalUnread);
   }, []);
+
 
   // 2. Realtime + أول تحميل
   useEffect(() => {

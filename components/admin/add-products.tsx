@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react"
 import { SUPABASE_STORAGE_URL } from "@/components/constants/index"; 
 import {MoreInfo} from '@/components/admin/more-informations'
+import imageCompression from 'browser-image-compression';
+
 import { motion,AnimatePresence } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import Cropper from 'react-easy-crop'
@@ -124,36 +126,78 @@ const setextra_payload = (payload: any) => {
   }
 }, [initialData]);
 
+const [isProcessing, setIsProcessing] = useState(false);
+const [isCompressing, setIsCompressing] = useState(false);
 
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (e.target.files && e.target.files.length > 0) {
-    const selectedFile = e.target.files[0];
-    setTempFile(selectedFile); // نخزنه مؤقتاً هنا
-    
-    const reader = new FileReader();
-    reader.addEventListener('load', () => {
-      setImageSrc(reader.result as string);
-      setIsCropping(true);
-      onStartCrop?.();
-    });
-    reader.readAsDataURL(selectedFile);
+
+const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  setIsProcessing(true); // تفعيل حالة التحميل
+
+  try {
+    const isHeic = file.type === "image/heic" || 
+                   file.type === "image/heif" || 
+                   file.name.toLowerCase().endsWith(".heic");
+
+    let fileToProcess = file;
+
+    if (isHeic) {
+      const heic2any = (await import('heic2any')).default;
+      const blob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.8 });
+      fileToProcess = new File([blob as Blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+        type: "image/jpeg",
+      });
+    }
+
+    // هنا يكمن الربط: تحديث الـ states هو ما يجعل المقص يرى الصورة فوراً
+    setTempFile(fileToProcess); 
+    setImageSrc(URL.createObjectURL(fileToProcess)); // المقص يستمع لهذا الـ state
+    setIsCropping(true);
+    onStartCrop?.();
+
+  } catch (error) {
+    console.error("خطأ:", error);
+    toast.error("حدث خطأ أثناء معالجة الصورة.");
+  } finally {
+    setIsProcessing(false); // إيقاف التحميل مهما كانت النتيجة
   }
 };
+
+
+  
 
 const handleCropSave = async () => {
+  setIsCompressing(true); // بداية التحميل
   try {
     const croppedBlob = await getCroppedImg(imageSrc!, croppedAreaPixels);
+    
     if (croppedBlob) {
-      const croppedFile = new File([croppedBlob], tempFile?.name || "product.jpg", { type: "image/jpeg" });
-      setfile(croppedFile); // الآن فقط اعتمدنا الملف
+      const fileToCompress = new File([croppedBlob], tempFile?.name || "product.jpg", { type: "image/jpeg" });
+
+      const options = {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 1280,
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(fileToCompress, options);
+
+      setfile(compressedFile);
       setIsCropping(false);
       onStopCrop?.();
-      toast.success("تم اعتماد الصورة");
+      toast.success("تم اعتماد وضغط الصورة بنجاح");
     }
   } catch (e) {
-    toast.error("خطأ في القص");
+    console.error("Error during compression:", e);
+    toast.error("خطأ في معالجة أو ضغط الصورة");
+  } finally {
+    setIsCompressing(false); // نهاية التحميل (سواء نجحت أو فشلت)
   }
 };
+
+
 
   
 
@@ -215,6 +259,7 @@ const handleCropSave = async () => {
       if (error) throw new Error(error);
       
       toast.success("تمت الإضافة بنجاح! 🎉");
+    
       if (onProductAdded) onProductAdded(data[0]);
       
       // تصفير الحقول
@@ -237,8 +282,10 @@ const handleCropSave = async () => {
 
 const handleReset = () => {
   setImageSrc(null); // مسح الصورة من المعاينة
-  setTempFile(null); // مسح الملف المخزن
-  // اختياري: يمكنك إضافة كود لتصفير الـ input إذا لزم الأمر
+  setTempFile(null); 
+  // إذا كان imageSrc يحتوي على رابط Blob، قم بتحريره
+if (imageSrc && imageSrc.startsWith('blob:')) {
+  URL.revokeObjectURL(imageSrc);}
 };
 
   return (
@@ -260,39 +307,45 @@ const handleReset = () => {
  
       <div className="space-y-4 space-y-2">
         <label className="text-sm font-medium">صورة المنتج:</label>
-         {!imageSrc ? (
-    <input 
-      type="file" 
-      onChange={onFileChange} 
-      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-    />
+          {isProcessing ? (
+    <div className="flex items-center gap-2 text-blue-600 font-bold">
+      <div className="w-5 h-5 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+      جاري معالجة الصورة...
+    </div>
   ) : (
-    /* إذا كانت هناك صورة، أظهر المعاينة مع زر الحذف */
+    <span>اختر صورة المنتج</span>
+  )}
+       {!imageSrc ? (
+  <input 
+    type="file" 
+    onChange={onFileChange} 
+    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+  />
+) : (
+  // أزلنا الأقواس { } التي كانت تحيط بالشرط
+  !isCropping && (
     <div className="relative w-16 h-16 shrink-0 group">
       <img 
         src={imageSrc} 
         alt="Preview" 
         className="w-full h-full object-cover rounded-lg border border-slate-200 shadow-sm"
       />
-      {/* زر الحذف الذي يظهر عند 
-      تمرير الماوس */}
-      
       <button 
-    onClick={handleReset}
-    className="absolute -top-2 -right-2 bg-white/70 backdrop-blur-sm text-red-500 rounded-full p-1 
-               shadow-md border border-slate-200 
-               opacity-0 group-hover:opacity-100 
-               transition-all duration-300 ease-in-out
-               hover:bg-red-50 hover:text-red-600 hover:scale-110
-               focus:outline-none focus:ring-2 focus:ring-red-300"
-    title="إزالة الصورة"
-  >
-    {/* تأكد من استيراد { Trash2 } من 'lucide-react' */}
-    <Trash2 size={16} strokeWidth={2.5} />
-  </button>
-    
+        onClick={handleReset}
+        className="absolute -top-2 -right-2 bg-white/70 backdrop-blur-sm text-red-500 rounded-full p-1 
+                   shadow-md border border-slate-200 
+                   opacity-0 group-hover:opacity-100 
+                   transition-all duration-300 ease-in-out
+                   hover:bg-red-50 hover:text-red-600 hover:scale-110
+                   focus:outline-none focus:ring-2 focus:ring-red-300"
+        title="إزالة الصورة"
+      >
+        <Trash2 size={16} strokeWidth={2.5} />
+      </button>
     </div>
-  )}
+  )
+)}
+
 
         {isCropping && (
   <div className="fixed inset-0 z-[100] bg-black flex flex-col">
@@ -328,7 +381,7 @@ const handleReset = () => {
           onClick={() => {
             setIsCropping(false);
             onStopCrop?.();
-            setTempFile(null);
+            setImageSrc(null);
             setFileInputKey(Date.now());
           }} 
           className="flex-1 py-3 text-sm font-bold text-gray-500 bg-gray-100 rounded-xl"
@@ -337,11 +390,20 @@ const handleReset = () => {
         </button>
 
         <button 
-          onClick={handleCropSave} 
-          className="flex-1 py-3 text-sm font-bold text-white bg-blue-600 rounded-xl shadow-lg"
-        >
-          اعتماد الصورة
-        </button>
+  onClick={handleCropSave} 
+  disabled={isCompressing} // تعطيل الزر أثناء المعالجة
+  className={`flex-1 py-3 text-sm font-bold text-white rounded-xl shadow-lg transition-all
+    ${isCompressing ? 'bg-blue-400 cursor-wait' : 'bg-blue-600 hover:bg-blue-700'}`}
+>
+  {isCompressing ? (
+    <span className="flex items-center justify-center gap-2">
+      <Loader2 className="animate-spin h-4 w-4" /> جاري المعالجة...
+    </span>
+  ) : (
+    "اعتماد الصورة"
+  )}
+</button>
+
       </div>
 
     </div>

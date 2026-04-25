@@ -1,5 +1,6 @@
 'use client' 
 import { useEffect, useState } from 'react'
+import { formatProductImage } from "@/utils/productUtils"; 
 import { SUPABASE_STORAGE_URL } from "@/components/constants/index";
 import { Plus,Edit3 ,X,Heart, ShoppingBag, Star } from "lucide-react"
 import FloatingMenu from '@/components/layout/FloatingMenu';
@@ -57,7 +58,7 @@ setIsDrawerOpen(false);
 
 
 const handleProductClick = (product: any) => {
-router.push(`/products/${product.id}`);};
+router.push(`admin/products/${product.id}`);};
 // دالة الحذف
 const handleDelete = async (id, title, Image) => {
   // نافذة التأكيد
@@ -99,8 +100,13 @@ const handleUpdateStatus = async (id, nextStatus) => {
   }
 };
 
-const addNewProductLocally = (newProduct) => {
-  setProducts((prevProducts) => [newProduct, ...prevProducts]);
+
+const addNewProductLocally = (newProduct: any) => {
+  // نستخدم الدالة هنا فقط
+  const formattedProduct = formatProductImage(newProduct);
+  
+  // نضيف المنتج بعد تنسيقه
+  setProducts((prevProducts) => [formattedProduct, ...prevProducts]);
 };
 
   // دالة جلب البيانات من Supabase

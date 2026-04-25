@@ -17,15 +17,15 @@ const [openIndex, setOpenIndex] = useState(null);
   const adminItems = [
     {
       name: "إدارة المنتجات",
-      path: "/products",
+      path: "/admin/products",
       icon: <Package size={20} />,
       children: [
         { name: "إضافة منتج", path: "/addproducts", icon: "📦" },
         { name: "إضافة صنف", path: "/products/category", icon: "🏷" },
       ],
     },
-    { name: "الإحصائيات", path: "/stats", icon: <BarChart3 size={20} /> },
-    { name: "الإعدادات", path: "/settings", icon: <Settings size={20} /> },
+    { name: "الإحصائيات", path: "/admin/stats", icon: <BarChart3 size={20} /> },
+    { name: "الإعدادات", path: "/admin/settings", icon: <Settings size={20} /> },
   ];
 const toggle = (index) => {
     setOpenIndex(openIndex === index ? null : index);
