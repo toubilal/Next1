@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from "react"
-import { SUPABASE_STORAGE_URL } from "@/components/constants/index"; 
+import { formatProductImage } from "@/utils/productUtils"; 
+ 
 import {MoreInfo} from '@/components/admin/more-informations'
 import imageCompression from 'browser-image-compression';
 
@@ -10,7 +11,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import Cropper from 'react-easy-crop'
 import {addProductAction,uploadImageAction,updateProductAction} from'@/app/actions/adminActions'
 import { Loader2, Plus, Image as ImageIcon, X,Trash2, Edit3 } from "lucide-react"
-
+import Image from 'next/image'
 import { supabase } from '@/app/supabaseClient'
 //import { uploadImageAction } from '@/app/actions'
 import { getCroppedImg } from '@/utils/cropImage'
@@ -111,7 +112,7 @@ const setextra_payload = (payload: any) => {
     if (Image) {
       // تحويل اسم الملف إلى رابط كامل للعرض في الـ img tag
       // تأكد من استيراد SUPABASE_STORAGE_URL من ملف الثوابت
-      setImageSrc(`${SUPABASE_STORAGE_URL}${Image}`);
+      setImageSrc(formatProductImage(Image));
     } else {
       setImageSrc("");
     }
@@ -238,6 +239,8 @@ const handleCropSave = async () => {
       Title: productName,
       Price: !isMoreOpen ? (Number.parseFloat(productPrice) || 0) : 0,
       Image: finalImagePath, // اسم الملف الجديد أو القديم أو فارغ
+     quantity:productQuantity,
+     field_desc:productDescription,
       category: productCategory,
       options: variants,
       status: 'active'
@@ -245,31 +248,42 @@ const handleCropSave = async () => {
 
     // 4. تنفيذ العملية (Edit vs Add)
     if (isEditMode) {
-      // نرسل الـ id، والبيانات، واسم الصورة القديمة (initialData.Image)
-      // الدالة التي كتبناها سابقاً ستتولى حذف القديمة إذا تغيرت
-      const { data, error } = await updateProductAction(initialData.id, productPayload, initialData.Image);
-      
-      if (error) throw new Error(error);
-      
-      toast.success("تم تحديث المنتج بنجاح! ✏️");
-      hideDrawer(data[0]);
-    } else {
-      // إضافة منتج جديد
-      const { data, error } = await addProductAction(productPayload);
-      if (error) throw new Error(error);
-      
-      toast.success("تمت الإضافة بنجاح! 🎉");
-    
-      if (onProductAdded) onProductAdded(data[0]);
-      
-      // تصفير الحقول
-      setProductName("");
-      setProductPrice("");
-      setproductCategory("");
-      setImageSrc(null);
-      setfile(null);
-      setFileInputKey(Date.now());
-    }
+  const { data, error } = await updateProductAction(initialData.id, productPayload, initialData.Image);
+  
+  if (error) throw new Error(error);
+
+  // تحديث رابط الصورة في البيانات العائدة
+  if (data && data[0] && data[0].Image) {
+    data[0].Image = formatProductImage(data[0].Image);
+  }
+  
+  toast.success("تم تحديث المنتج بنجاح! ✏️");
+  hideDrawer(data[0]);
+} else {
+  // إضافة منتج جديد
+  const { data, error } = await addProductAction(productPayload);
+  if (error) throw new Error(error);
+
+  // تحديث رابط الصورة في البيانات العائدة
+  if (data && data[0] && data[0].Image) {
+    data[0].Image = formatProductImage(data[0].Image);
+  }
+  
+  toast.success("تمت الإضافة بنجاح! 🎉");
+
+  if (onProductAdded) {
+   // alert(JSON.stringify(data[0]))
+    onProductAdded(data[0]);
+  }
+  
+  // تصفير الحقول
+  setProductName("");
+  setProductPrice("");
+  setproductCategory("");
+  setImageSrc(null);
+  setfile(null);
+  setFileInputKey(Date.now());
+}
 
   } catch (err: any) {
     console.error("Action Error:", err);
@@ -322,13 +336,15 @@ if (imageSrc && imageSrc.startsWith('blob:')) {
     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
   />
 ) : (
-  // أزلنا الأقواس { } التي كانت تحيط بالشرط
   !isCropping && (
     <div className="relative w-16 h-16 shrink-0 group">
-      <img 
+      {/* تم استخدام fill بدلاً من تحديد أبعاد يدوية */}
+      <Image 
         src={imageSrc} 
         alt="Preview" 
-        className="w-full h-full object-cover rounded-lg border border-slate-200 shadow-sm"
+        fill
+        sizes="64px"
+        className="object-cover rounded-lg border border-slate-200 shadow-sm"
       />
       <button 
         onClick={handleReset}
@@ -345,6 +361,7 @@ if (imageSrc && imageSrc.startsWith('blob:')) {
     </div>
   )
 )}
+
 
 
         {isCropping && (

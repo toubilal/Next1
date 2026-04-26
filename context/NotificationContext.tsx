@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
-import { SUPABASE_STORAGE_URL } from "@/components/constants/index"; 
+import { formatProductImage } from "@/utils/productUtils"; 
 import { supabase } from '@/app/supabaseClient';
 
 export const NotificationContext = createContext(null);
@@ -29,7 +29,9 @@ export const NotificationProvider = ({ children }) => {
         product: item.product ? {
           ...item.product,
           // دمج الرابط هنا
-          Image: item.product.Image ? `${SUPABASE_STORAGE_URL}${item.product.Image}` : null
+          Image: item.product.Image
+  ? formatProductImage(item.product.Image)
+  : null
         } : null
       }))
     })) : [];

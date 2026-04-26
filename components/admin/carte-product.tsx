@@ -1,7 +1,7 @@
 'use client' 
 import { useEffect, useState } from 'react'
 import { formatProductImage } from "@/utils/productUtils"; 
-import { SUPABASE_STORAGE_URL } from "@/components/constants/index";
+
 import { Plus,Edit3 ,X,Heart, ShoppingBag, Star } from "lucide-react"
 import FloatingMenu from '@/components/layout/FloatingMenu';
 import {deleteImageFile} from '@/app/actions.ts'
@@ -58,7 +58,7 @@ setIsDrawerOpen(false);
 
 
 const handleProductClick = (product: any) => {
-router.push(`admin/products/${product.id}`);};
+router.push(`/admin/products/${product.id}`);};
 // دالة الحذف
 const handleDelete = async (id, title, Image) => {
   // نافذة التأكيد
@@ -102,11 +102,9 @@ const handleUpdateStatus = async (id, nextStatus) => {
 
 
 const addNewProductLocally = (newProduct: any) => {
-  // نستخدم الدالة هنا فقط
-  const formattedProduct = formatProductImage(newProduct);
-  
+ 
   // نضيف المنتج بعد تنسيقه
-  setProducts((prevProducts) => [formattedProduct, ...prevProducts]);
+  setProducts(prev => [newProduct, ...prev])
 };
 
   // دالة جلب البيانات من Supabase
@@ -119,10 +117,16 @@ const addNewProductLocally = (newProduct: any) => {
 
     // معالجة البيانات: دمج الرابط الأساسي مع اسم الصورة لكل منتج
     const productsWithUrls = data.map((product) => ({
-      ...product,
-      // تأكد أن SUPABASE_STORAGE_URL معرف لديك في ملف الثوابت
-      Image: product.Image ? `${SUPABASE_STORAGE_URL}${product.Image}` : null
-    }));
+  ...product,
+
+  // نحفظ الاسم/المسار القديم للصورة
+  imageName: product.Image,
+
+  // نحول Image إلى رابط كامل
+  Image: product.Image
+    ? formatProductImage(product.Image)
+    : null
+}));
 
     setProducts(productsWithUrls);
   } catch (error) {

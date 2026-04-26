@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { SUPABASE_STORAGE_URL } from "@/components/constants/index";
+import { formatProductImage } from "@/utils/productUtils"; 
 import Link from 'next/link';
 import Image from "next/image";
 import { supabase } from "@/app/supabaseClient";
@@ -44,7 +44,7 @@ const hideDrawer = (newProduct:[]) => {
         // [تعديل هنا]: تحويل اسم الملف إلى رابط كامل ليتم عرضه في الـ Img
         const productWithUrl = {
           ...mainProduct,
-          Image: mainProduct.Image ? `${SUPABASE_STORAGE_URL}${mainProduct.Image}` : null
+          Image: mainProduct.Image ? formatProductImage(mainProduct.Image) : null
         };
         setProduct(productWithUrl);
 
@@ -55,7 +55,7 @@ const hideDrawer = (newProduct:[]) => {
           // [تعديل هنا]: تطبيق التحويل على مصفوفة المنتجات ذات الصلة
           const similarWithUrls = similar.map(item => ({
             ...item,
-            Image: item.Image ? `${SUPABASE_STORAGE_URL}${item.Image}` : null
+            Image: item.Image ? formatProductImage(item.Image) : null
           }));
           setRelated(similarWithUrls);
         }
@@ -109,7 +109,7 @@ const hideDrawer = (newProduct:[]) => {
         </div>
 
         <div className="bg-slate-50 p-4 border-r-4 border-black font-medium text-slate-700">
-          {product.Description || "لا يوجد وصف متوفر."}
+          {product.field_desc || "لا يوجد وصف متوفر."}
         </div>
 
         {related.length > 0 && (

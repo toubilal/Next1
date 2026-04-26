@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import Image from "next/image";
 import { useNotifications } from "@/context/NotificationContext";
 import { deleteId_order,Stats, getRecentOrders, getWeeklyStats,update_quantity_rpc ,handleConfirmOrder,deleteOrder} from '@/app/actions/adminActions'; // تأكد من استيراد دالة التحديث
 import {Check, X, DollarSign,Loader2,Eye,Trash2, ShoppingCart, RefreshCw,RefreshCcw } from 'lucide-react';
@@ -299,11 +300,14 @@ const handleDelete = async (orderId, productId,id) => {
     )}
 
     {/* صورة المنتج */}
-    <img
-      src={item.product?.Image || "https://via.placeholder.com/40"}
-      className="w-7 h-7 rounded-lg object-cover bg-white flex-shrink-0"
-      alt=""
-    />
+    <Image
+  src={item.product?.Image || "https://via.placeholder.com/40"}
+  width={28}
+  height={28}
+  className="rounded-lg object-cover bg-white flex-shrink-0"
+  alt=""
+/>
+
 
     {/* اسم المنتج */}
     <span className="truncate flex-1 font-medium text-right">
@@ -444,25 +448,36 @@ const handleDelete = async (orderId, productId,id) => {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {stats.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors text-xs">
-                  <td className="p-4 font-bold text-slate-700">
-                    <Link href={`/products/${item.id}`} className="flex items-center gap-3 group">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-100 overflow-hidden flex-shrink-0">
-                        {item.Image ? <img src={item.Image} className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <div className="w-full h-full flex items-center justify-center">🖼️</div>}
-                      </div>
-                      <div className="line-clamp-1">{item.Title}</div>
-                    </Link>
-                  </td>
-                  <td className="p-4 text-center font-mono">{item.views || 0}</td>
-                  <td className="p-4 text-center font-mono text-pink-500">{item.likes_count || 0}</td>
-                  <td className="p-4 text-center font-mono text-green-600">{item.orders || 0}</td>
-                  <td className="p-4 text-center">
-                    <span className={`px-2 py-1 rounded-lg font-bold ${Number(item.conversion) > 5 ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                      %{item.conversion || 0}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors text-xs">
+    <td className="p-4 font-bold text-slate-700">
+      <Link href={`/products/${item.id}`} className="flex items-center gap-3 group">
+        {/* أضفنا relative للحاوية حتى تعمل الخاصية fill بشكل صحيح */}
+        <div className="relative w-10 h-10 rounded-xl bg-slate-100 border border-slate-100 overflow-hidden flex-shrink-0">
+          {item.Image ? (
+            <Image 
+              src={item.Image} 
+              alt={item.Title || "Product Image"}
+              fill
+              className="object-cover group-hover:scale-110 transition-transform" 
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">🖼️</div>
+          )}
+        </div>
+        <div className="line-clamp-1">{item.Title}</div>
+      </Link>
+    </td>
+    <td className="p-4 text-center font-mono">{item.views || 0}</td>
+    <td className="p-4 text-center font-mono text-pink-500">{item.likes_count || 0}</td>
+    <td className="p-4 text-center font-mono text-green-600">{item.orders || 0}</td>
+    <td className="p-4 text-center">
+      <span className={`px-2 py-1 rounded-lg font-bold ${Number(item.conversion) > 5 ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+        %{item.conversion || 0}
+      </span>
+    </td>
+  </tr>
+))}
+
             </tbody>
           </table>
         </div>

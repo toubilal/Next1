@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Home, Package, BarChart3, Settings, LogOut, Menu, X, Bell, ShoppingBag, ArrowLeft } from "lucide-react";
+import Image from 'next/image'
 import { useNotifications } from "@/context/NotificationContext";
 
 export function AdminDrawer() {
@@ -198,16 +199,21 @@ const toggle = (index) => {
     }`}
   >
     {/* صورة المنتج */}
-    <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100">
-      {item.product?.Image ? (
-        <img
-          src={item.product.Image}
-          alt=""
-          className="w-full h-full object-cover"
-        />
+  
+    <div className="relative w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100">
+      
+      {item.product?.Image ? (<Image
+  src={item.product.Image}
+  alt=""
+  fill
+  className="w-full h-full object-cover"
+/>
+
+        
       ) : (
         <div className="w-full h-full flex items-center justify-center text-[8px] text-slate-300 uppercase">
           N/A
+      
         </div>
       )}
     </div>

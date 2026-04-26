@@ -105,7 +105,7 @@ useEffect(() => {
   if (loading) return (
   <main className="p-4 bg-slate-50 min-h-screen">
     {/* العنوان ثابت ليطابق الصفحة الحقيقية */}
-    <h1 className="text-2xl font-bold text-right mb-6">متجرنا 🛍️</h1>
+   
     
     {/* نستخدم نفس تقسيم الـ Grid تماماً (gap-5) ليطابق البطاقات الحقيقية */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -145,7 +145,7 @@ useEffect(() => {
   
   return (
     <main className="p-4 bg-slate-50 min-h-screen">
-      <h1 className="text-2xl font-bold text-right mb-6">متجرنا 🛍️</h1>
+      
  <CategoryBar 
       categories={categoriesList} 
       selected={selectedCategory} 

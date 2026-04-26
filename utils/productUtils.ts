@@ -1,12 +1,15 @@
 // utils/productUtils.ts
 import { SUPABASE_STORAGE_URL } from "@/components/constants/index";
 
-export const formatProductImage = (product: any) => {
-  // نقوم بإضافة الرابط الكامل فقط إذا لم يكن موجوداً
-  return {
-    ...product,
-    Image: product.Image && !product.Image.startsWith('http') 
-      ? `${SUPABASE_STORAGE_URL}${product.Image}` 
-      : product.Image
-  };
+export const formatProductImage = (image) => {
+  if (!image) return null;
+
+  const cleanImage =
+    typeof image === "object"
+      ? Object.values(image).join("")
+      : image;
+
+  return cleanImage.startsWith("http")
+    ? cleanImage
+    : `${SUPABASE_STORAGE_URL}${cleanImage}`;
 };

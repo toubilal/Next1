@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from 'next/link';
 import Image from "next/image";
 import { supabase } from "@/app/supabaseClient";
-import { SUPABASE_STORAGE_URL } from "@/components/constants/index";
+import { formatProductImage } from "@/utils/productUtils"; 
 import {incrementViewAction}  from '@/app/supaBase'
 import {CartContext} from '@/context/CartContext'
 
@@ -60,7 +60,7 @@ export default function ProductDetailsView() {
         // معالجة رابط الصورة للمنتج الرئيسي
         const mainProduct = {
           ...rawProduct,
-          Image: rawProduct.Image ? `${SUPABASE_STORAGE_URL}${rawProduct.Image}` : null
+          Image: rawProduct.Image ? formatProductImage(rawProduct.Image) : null
         };
         
         setProduct(mainProduct);
@@ -78,7 +78,7 @@ export default function ProductDetailsView() {
           // معالجة روابط الصور للمنتجات ذات الصلة
           const similarWithUrls = similar.map((item) => ({
             ...item,
-            Image: item.Image ? `${SUPABASE_STORAGE_URL}${item.Image}` : null
+            Image: item.Image ? formatProductImage(item.Image) : null
           }));
           setRelated(similarWithUrls);
         }
@@ -129,7 +129,7 @@ export default function ProductDetailsView() {
         </div>
 
         <div className="bg-slate-50 p-4 border-r-4 border-black font-medium text-slate-700">
-          {product.Description || "لا يوجد وصف متوفر."}
+          {product.field_desc || "لا يوجد وصف متوفر."}
         </div>
 
         {related.length > 0 && (

@@ -100,7 +100,7 @@ export const ProductCard = ({
           <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">
             {product.Brand?.[0] || "V"}
           </div>
-          <span className="mr-2 text-xs font-bold text-slate-800">{product.Brand || "VELOUR"}</span>
+          <span className="mr-2 text-xs font-bold text-slate-800">{product.Brand || "Brand"}</span>
         </div>
         {isAdmin && product.status === 'archived' && (
           <span className="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">مؤرشف</span>
@@ -112,6 +112,7 @@ export const ProductCard = ({
         className={`relative w-full h-64 overflow-hidden cursor-pointer ${!isImageLoaded ? 'animate-pulse bg-slate-200' : ''}`} 
         onClick={() => handleProductClick?.(product)}
       >
+        
         <Image 
           src={product.Image} 
           fill 
@@ -124,7 +125,7 @@ export const ProductCard = ({
         
         {isAdmin && (
           <div className="absolute top-2 left-2 z-30 flex flex-col gap-2">
-            <button onClick={(e) => { e.stopPropagation(); handleDelete?.(product.id, product.Title, product.Image); }}
+            <button onClick={(e) => { e.stopPropagation(); handleDelete?.(product.id, product.Title, product.imageName); }}
               className="p-2 bg-white/90 text-red-500 rounded-full shadow-md hover:bg-red-50 active:scale-90 transition-all">
               <X size={16} />
             </button>
