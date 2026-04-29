@@ -104,3 +104,17 @@ body {
   border: 2px solid #ef4444 !important; /* لون أحمر */
   background-color: #fee2e2 !important; /* خلفية حمراء باهتة */
 }
+@keyframes slide {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide {
+  animation: slide 0.25s ease;
+}

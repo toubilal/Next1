@@ -11,15 +11,14 @@ export async function getSiteSettings() {
 
 export async function updateSiteSettings(formData: FormData) {
   const supabase = await createClient();
-  // استخراج القيم من الفورم وتحديثها
-  const { error } = await supabase
-    .from('site_settings')
-    .update({ 
-       logo_url: formData.get('logo'),
-       footer_text: formData.get('footer'),
-       // ... باقي الحقول
-    })
+  const logo = formData.get('logo') as string;
+  const footer = formData.get('footer') as string;
+
+  await supabase.from('site_settings')
+    .update({ logo_url: logo, footer_text: footer })
     .eq('id', 1);
 
-  if (!error) revalidatePath('/', 'layout'); // تحديث الموقع بالكامل بعد التعديل
+  // السحر هنا: هذا السطر يجبر الموقع على إعادة قراءة البيانات 
+  // ليظهر التعديل فوراً في الـ Footer والـ Header
+  revalidatePath('/'); 
 }

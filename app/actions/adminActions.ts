@@ -376,4 +376,60 @@ export async function uploadImageAction(formData) {
     return { success: true, path: data.path };
   });
 }
+export async function updateSiteSettings(formData: FormData) {
+  return adminAction(async () => {
+ const file = formData.get('logo') as File | null;
+ const siteTitle = formData.get('site_title') as string
+  const footerLinks = formData.get('footer_links') as string;
+  
+if (file && file.size > 0) {
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('products')
+        .upload('logo.webp', file, {
+          upsert: true,
+          contentType: 'image/webp',
+        })
+
+      if (uploadError) {
+        console.error("UPLOAD ERROR:", uploadError)
+        throw new Error("فشل رفع اللوجو")
+      }
+    }
+  // تحويل JSON
+  let parsedLinks = [];
+  try {
+    parsedLinks = footerLinks ? JSON.parse(footerLinks) : [];
+  } catch (e) {
+    console.error("خطأ في تحليل البيانات:", e);
+    throw new Error("تنسيق الروابط غير صالح");
+  }
+
+  // استخدام .update بدلاً من .upsert
+  const { error: dbError } = await supabaseAdmin
+    .from('site_settings')
+    .upsert({
+      footer_links: parsedLinks,
+   
+        site_title: siteTitle,
+   
+      // أضف أي حقول أخرى تريد تحديثها هنا فقط
+    })
+    .eq('id', 1); // تأكد من استهداف الصف الصحيح
+
+  if (dbError) {
+    console.error("خطأ قاعدة البيانات:", dbError);
+    throw new Error(dbError.message);
+  }})
+}
+
+export async function getSiteSettings() {
+  const { data, error } = await supabaseAdmin
+    .from('site_settings')
+    .select('*')
+    .eq('id', 1)
+    .single()
+
+  if (error) throw new Error("فشل جلب الإعدادات")
+  return data
+}
 

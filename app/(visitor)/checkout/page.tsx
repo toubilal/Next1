@@ -1,11 +1,13 @@
 "use client";
 import Image from 'next/image';
 import { useContext, useState } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import {submitOrderAction} from '@/app/actions/ordersActions'
 import { CartContext } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase"; // تأكد من مسار استيراد supabase لديك
 
 export default function CheckoutPage() {
+  const [captchaToken, setCaptchaToken] = useState(null);
   const [toast, setToast] = useState(null);const showToast = (message, type = "info") => {
   setToast({ message, type });
 
@@ -69,7 +71,11 @@ export default function CheckoutPage() {
       status: 'pending'
     }));*/
 
-    const result = await submitOrderAction(cart, customerInfo);
+   const result = await submitOrderAction(
+  cart,
+  customerInfo,
+  captchaToken
+);
 if (result.success) {
    alert("تم الطلب!");
 }
@@ -195,12 +201,20 @@ if (result.success) {
             <span className="text-gray-500 font-bold">المجموع الكلي:</span>
             <span className="text-2xl font-black text-green-700"> {cart.reduce((total, item) => total + (Number(item.Price) * (item.quantityCart || 1)), 0)} <span className="text-sm">د.ج</span></span>
           </div>
-
+<ReCAPTCHA
+  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+  onChange={(token) => setCaptchaToken(token)}
+/>
           <button 
             onClick={handleConfirmOrder}
-            disabled={loading || cart.length === 0 || !customerInfo.fullName || !customerInfo.phone||
-               !customerInfo.address
-            }
+            disabled={
+  loading ||
+  cart.length === 0 ||
+  !customerInfo.fullName ||
+  !customerInfo.phone ||
+  !customerInfo.address ||
+  !captchaToken
+}
             className="w-full bg-black text-white py-4 rounded-2xl font-black text-lg shadow-lg active:scale-95 transition-all disabled:bg-gray-300 disabled:active:scale-100"
           >
             {loading ? "جاري الإرسال..." : "تأكيد الطلب الآن"}

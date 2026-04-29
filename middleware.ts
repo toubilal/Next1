@@ -31,35 +31,34 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // التحقق من الجلسة
-  const {
-  data: { user },
-} = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
-// إذا ليس مسجل
-if (request.nextUrl.pathname.startsWith('/admin') && !user) {
-  const url = request.nextUrl.clone()
-  url.pathname = '/login'
-  return NextResponse.redirect(url)
-}
-
-// ✅ تحقق من admin
-if (request.nextUrl.pathname.startsWith('/admin') && user) {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
+  // 1. حماية مسار الأدمن: التحقق من تسجيل الدخول
+  if (request.nextUrl.pathname.startsWith('/admin') && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/'
+    url.pathname = '/login'
     return NextResponse.redirect(url)
   }
-}
+
+  // 2. حماية مسار الأدمن: التحقق من الصلاحيات (Role)
+  if (request.nextUrl.pathname.startsWith('/admin') && user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // ✅ هذا هو الجزء المهم جداً: يجب إرجاع الـ response في النهاية
+  return response
 }
 
-// تحديد المسارات التي يعمل عليها الحارس
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',

@@ -1,5 +1,4 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+/** @type {import('next').NextConfig} */ var nextConfig = {
     // 1. الإعدادات الموجودة عندك مسبقاً
     experimental: {
         serverActions: {
@@ -17,5 +16,4 @@ const nextConfig = {
         ],
     },
 };
-
 module.exports = nextConfig;

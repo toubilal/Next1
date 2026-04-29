@@ -1,27 +1,30 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { SUPABASE_STORAGE_URL } from "@/components/constants/index"; // استيراد الرابط
+import { ClientProviders } from "./ClientProviders";
 import React from 'react'
 import "@/app/globals.css";
-import { ClientProviders } from "./ClientProviders";
-
 import { getSiteSettings } from '@/app/actions/settings';
 import Header from '@/components/layout/Header'; 
 import Footer from '@/components/layout/Footer'; 
-// احذف الـ Fonts من هنا إذا كانت موجودة في الـ Root Layout الرئيسي
-// اترك الـ Metadata إذا كنت تريدها مخصصة لصفحات الزوار فقط
 
-export  default async function VisitorLayout({
+export default async function VisitorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const settings = await getSiteSettings();
+  
+  // بناء الرابط الثابت
+  
+
   return (
-    // احذف <html> و <body> من هنا
     <ClientProviders>
-      <Header logo={settings.logo_url} />
+      {/* تمرير الرابط الموحد للـ Header */}
+      <Header /> 
       {children}
-      <Footer text={settings.footer_text} />
+      <Footer 
+        text={settings?.footer_text || "جميع الحقوق محفوظة"}
+        links={settings?.footer_links}
+      />
     </ClientProviders>
   );
 }
