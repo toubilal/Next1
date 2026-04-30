@@ -1,49 +1,70 @@
-// components/layout/Header.tsx
-
 'use client'
 import Image from 'next/image';
 import { useEffect, useState } from 'react'
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { formatProductImage } from "@/utils/productUtils"; 
+
 export default function Header() {
- const [logoUrl, setLogoUrl] = useState('/logo.webp'); 
+  const pathname = usePathname();
+  const [logoUrl, setLogoUrl] = useState('/logo.webp'); 
+  const [tagline, setTagline] = useState('نمثل الأصالة والإبداع');
+  const [storeName, setStoreName] = useState('اسم المتجر');
 
-// 2. استخدم useEffect لتحديث الرابط بعد تحميل الصفحة فقط
-useEffect(() => {
-  setLogoUrl(formatProductImage(`/logo.webp?t=${Date.now()}`));
-}, []);
- 
- 
+  useEffect(() => {
+    setLogoUrl(formatProductImage(`/logo.webp?t=${Date.now()}`));
+  }, []);
+
+  const isHomePage = pathname === '/';
   
-
-
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo Section */}
-       <Link href="/" className="flex items-center gap-2">
-  <Image
-    src={logoUrl}
-    alt="Logo"
-    width={40}  // العرض المطلوب (أو 32 ليكون أصغر)
-    height={40} // الطول المطلوب
-    className="object-contain w-10 h-10" // حجم صغير ثابت
-    priority={true} // لتحميل الشعار فوراً
-  />
-</Link>
-        
+  <header className="w-full backdrop-blur-md">
+    <div className="w-full px-4 py-3 flex flex-col gap-3">
 
-        {/* Navigation Links */}
-        <nav className="hidden md:flex items-center gap-8">
-           <Link href="/" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">الرئيسية</Link>
-           <Link href="/products" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">المنتجات</Link>
-        </nav>
-
-        {/* Actions */}
-        <div className="flex items-center gap-4">
-           
-        </div>
+      {/* Row 1 */}
+      <div className="w-full flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src={logoUrl}
+            alt="Logo"
+            width={40}
+            height={40}
+            className="object-contain w-10 h-10"
+            priority
+          />
+        </Link>
+        <span className="font-bold text-lg text-text text-start">
+          {storeName}
+        </span>
       </div>
-    </header>
-  );
+
+      {/* Home Page Content */}
+      {isHomePage && (
+        <>
+          {/* Row 2 */}
+          <span className="text-sm text-muted text-start w-full">
+            {tagline}
+          </span>
+
+          {/* Row 3 */}
+          <div className="w-full flex justify-start gap-2">
+            <a
+              href="#products-part"
+              className="px-3 py-1.5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-hover transition"
+            >
+              تصفح المنتجات
+            </a>
+            <a
+              href="#as"
+              className="px-3 py-1.5 rounded-xl border border-primary text-primary text-sm font-medium hover:bg-primary/10 transition"
+            >
+              تعرف علينا
+            </a>
+          </div>
+        </>
+      )}
+
+    </div>
+  </header>
+);
 }

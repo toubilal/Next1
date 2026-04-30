@@ -103,34 +103,30 @@ useEffect(() => {
     fetchProducts()
   }, [])
   if (loading) return (
-  <main className="p-4 bg-slate-50 min-h-screen">
-    {/* العنوان ثابت ليطابق الصفحة الحقيقية */}
-   
-    
-    {/* نستخدم نفس تقسيم الـ Grid تماماً (gap-5) ليطابق البطاقات الحقيقية */}
+  <main className="p-4 bg-surface-2 min-h-screen">
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="flex flex-col w-full bg-white border border-slate-200 overflow-hidden shadow-sm">
+        <div key={i} className="flex flex-col w-full bg-surface border border-border overflow-hidden shadow-sm">
           
-          {/* رأس البطاقة (Header) */}
+          {/* Header */}
           <div className="flex items-center p-3">
-            <div className="w-8 h-8 rounded-full bg-slate-200"></div>
-            <div className="mr-3 h-3 bg-slate-200 rounded w-20"></div> {/* mr-3 لأن الاتجاه عربي */}
+            <div className="w-8 h-8 rounded-full bg-surface-2"></div>
+            <div className="mr-3 h-3 bg-surface-2 rounded w-20"></div>
           </div>
 
-          {/* مساحة الصورة المربعة (1:1) */}
-          <div className="w-full aspect-square bg-slate-200"></div>
+          {/* Image */}
+          <div className="w-full aspect-square bg-surface-2"></div>
 
-          {/* أيقونات التفاعل */}
-          <div className="flex gap-4 p-3 border-t border-slate-50">
-            <div className="w-5 h-5 bg-slate-100 rounded-full"></div>
-            <div className="w-5 h-5 bg-slate-100 rounded-full"></div>
+          {/* Actions */}
+          <div className="flex gap-4 p-3 border-t border-border">
+            <div className="w-5 h-5 bg-surface-2 rounded-full"></div>
+            <div className="w-5 h-5 bg-surface-2 rounded-full"></div>
           </div>
 
-          {/* تفاصيل المنتج */}
+          {/* Info */}
           <div className="p-3 space-y-3">
-            <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-            <div className="h-3 bg-slate-100 rounded w-1/4"></div>
+            <div className="h-4 bg-surface-2 rounded w-3/4"></div>
+            <div className="h-3 bg-surface-2 rounded w-1/4"></div>
           </div>
         </div>
       ))}
@@ -138,37 +134,33 @@ useEffect(() => {
   </main>
 );
 
-  
-
-   
-  
-  
-  return (
-    <main className="p-4 bg-slate-50 min-h-screen">
-      
- <CategoryBar 
+return (
+  <main className="p-4 bg-surface-2 min-h-screen">
+    
+    <CategoryBar 
       categories={categoriesList} 
       selected={selectedCategory} 
       onSelect={(cat) => setSelectedCategory(cat)} 
-      
     />
-     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-2 bg-slate-50">
+
+    <div
+      id="products-part"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-2 bg-surface-2"
+    >
       <AnimatePresence mode="popLayout">
-           {filteredProducts.map((item,index) => (
+        {filteredProducts.map((item, index) => (
           <ProductCard 
             key={item.id} 
             product={item} 
             isAdmin={false}
             priority={index < 3}
             isLiked={userLikedIds.includes(item.id)}
-  likedProduct ={toggleLike}
-  handleProductClick={handleProductClick}
-            
-            // هنا السحر! الأزرار ستختفي تلقائياً
+            likedProduct={toggleLike}
+            handleProductClick={handleProductClick}
           />
         ))}
-         </AnimatePresence>
-      </div>
-    </main>
-  );
+      </AnimatePresence>
+    </div>
+  </main>
+);
 }

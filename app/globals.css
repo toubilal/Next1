@@ -1,9 +1,92 @@
 @import "tailwindcss";
 
+/* =========================
+   🎨 DESIGN SYSTEM COLORS
+========================= */
+:root {
+  /* Primary (ذهبي احترافي) */
+  --primary-50:  #fff8e1;
+  --primary-100: #ffecb3;
+  --primary-200: #ffe082;
+  --primary-300: #ffd54f;
+  --primary-400: #ffca28;
+  --primary-500: #d4af37; /* الأساسي */
+  --primary-600: #b8902f;
+  --primary-700: #8d6e1f;
+  --primary-800: #5d4510;
+  --primary-900: #3a2b08;
+
+  /* Gray System */
+  --gray-50:  #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  /* Base UI */
+  --background: #f8f9fa;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: #e2e8f0;
+
+  /* Text */
+  --text: var(--gray-900);
+  --muted: var(--gray-500);
+
+  /* Status */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error:   #ef4444;
+  --info:    #3b82f6;
+}
+
+/* =========================
+   🔗 Tailwind Mapping
+========================= */
+@theme inline {
+  --color-primary: var(--primary-500);
+  --color-primary-hover: var(--primary-600);
+
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+
+  --color-border: var(--border);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+}
+
+/* =========================
+   🧱 Base Styles
+========================= */
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =========================
+   🧰 Utilities
+========================= */
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
+
+/* =========================
+   🔔 Toast
+========================= */
 .toast {
   position: fixed;
   top: 20px;
@@ -18,25 +101,10 @@
   box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
 
-/* Success */
-.toast.success {
-  background: #22c55e;
-}
-
-/* Error */
-.toast.error {
-  background: #ef4444;
-}
-
-/* Warning */
-.toast.warning {
-  background: #f59e0b;
-}
-
-/* Info */
-.toast.info {
-  background: #3b82f6;
-}
+.toast.success { background: var(--success); }
+.toast.error   { background: var(--error); }
+.toast.warning { background: var(--warning); }
+.toast.info    { background: var(--info); }
 
 @keyframes fadeInOut {
   0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
@@ -44,66 +112,31 @@
   90% { opacity: 1; }
   100% { opacity: 0; transform: translateX(-50%) translateY(10px); }
 }
-:root {
-  --background: #f8f9fa; /* خلفية فاتحة جداً مريحة */
-  --foreground: #171717;
-  
-  /* الألوان الخاصة ببراند المتجر */
-  --color-primary: #d4af37;     /* اللون الذهبي الأساسي */
-  --color-secondary: #64748b;    /* رمادي للنصوص الثانوية */
-  --color-card: #ffffff;         /* لون خلفية البطاقة */
-  --color-border: #e2e8f0;       /* لون الحدود ناعم */
-}
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  
-  /* ربط المتغيرات بأسماء كلاسات تيلويند */
-  --color-primary: var(--color-primary);
-  --color-secondary: var(--color-secondary);
-  --color-card: var(--color-card);
-  --color-border: var(--color-border);
-}
-
-/* إذا أردت إلغاء الوضع الليلي مؤقتاً ليبقى المتجر فاتحاً دائماً */
-/* أو اتركه كما هو إذا أردت أن يتغير مع إعدادات الهاتف *//* 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f0f0f;
-    --foreground: #ededed;
-    --color-card: #1a1a1a;
-    --color-border: #2d2d2d;
-  }
-}
-*/
-
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-/* أنيميشن الاهتزاز الأفقي */
+/* =========================
+   ⚠️ Duplicate Animation
+========================= */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-6px); }
   40%, 80% { transform: translateX(6px); }
 }
 
-/* أنيميشن نبض الظل (باللون الأحمر للتنبيه) */
 @keyframes pulseGlow {
   0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
   70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
   100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
-/* الكلاس الذي سيتم تفعيله برمجياً */
 .is-duplicate {
   animation: shake 0.4s ease-in-out, pulseGlow 0.7s ease-in-out;
-  border: 2px solid #ef4444 !important; /* لون أحمر */
-  background-color: #fee2e2 !important; /* خلفية حمراء باهتة */
+  border: 2px solid var(--error) !important;
+  background-color: #fee2e2 !important;
 }
+
+/* =========================
+   🎞 Animations
+========================= */
 @keyframes slide {
   from {
     transform: translateX(100%);

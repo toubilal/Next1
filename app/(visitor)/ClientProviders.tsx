@@ -15,8 +15,8 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
     <CartProvider>
       <Toaster />
       <Cart isOpen={isCartOpen} onClose={closeCart} />
-      <VisitorDrawer isAdmin={false} />
-      <main className="p-4">
+      <VisitorDrawer  />
+      <main className="p-4 bg-surface-2 ">
         {children}
       </main>
     </CartProvider>

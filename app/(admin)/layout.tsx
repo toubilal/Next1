@@ -25,13 +25,17 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <NotificationProvider>
-    <div >
+    <NotificationProvider
+    
+    >
+    <div 
+    className=" bg-surface-2 "
+    >
       
       {/* Drawer يظهر في كل صفحات admin */}
       <AdminDrawer  />
 
-      <main className="p-4">
+      <main className="p-4 bg-surface-2 ">
         {children}
       </main>
       

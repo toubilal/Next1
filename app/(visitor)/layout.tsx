@@ -1,4 +1,5 @@
-import { SUPABASE_STORAGE_URL } from "@/components/constants/index"; // استيراد الرابط
+// VisitorLayout.tsx
+import { SUPABASE_STORAGE_URL } from "@/components/constants/index"; 
 import { ClientProviders } from "./ClientProviders";
 import React from 'react'
 import "@/app/globals.css";
@@ -12,19 +13,21 @@ export default async function VisitorLayout({
   children: React.ReactNode;
 }) {
   const settings = await getSiteSettings();
-  
-  // بناء الرابط الثابت
-  
 
   return (
     <ClientProviders>
-      {/* تمرير الرابط الموحد للـ Header */}
-      <Header /> 
-      {children}
-      <Footer 
-        text={settings?.footer_text || "جميع الحقوق محفوظة"}
-        links={settings?.footer_links}
-      />
+      <div dir="rtl" className="min-h-screen flex flex-col bg-surface-2  text-foreground">
+        <Header /> 
+
+        <main className="flex-grow">
+          {children}
+        </main>
+
+        <Footer 
+          text={settings?.footer_text || "جميع الحقوق محفوظة"}
+          links={settings?.footer_links}
+        />
+      </div>
     </ClientProviders>
   );
 }

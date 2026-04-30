@@ -14,7 +14,7 @@ export default function AuthLayout({
 }) {
   return (
     // هنا نستخدم div فقط ليحتوي الصفحة، بدون html أو body
-    <div className="bg-slate-100 min-h-screen flex items-center justify-center">
+    <div className="bg-surface-2  min-h-screen flex items-center justify-center">
       <main className="w-full max-w-md">
         {children}
       </main>

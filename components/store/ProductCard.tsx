@@ -1,4 +1,4 @@
-"use client";
+'use client'
 import React, { useState, useContext, useMemo } from 'react';
 import { CartContext } from '@/context/CartContext';
 import Image from 'next/image';
@@ -34,11 +34,9 @@ export const ProductCard = ({
   const [isFavorite, setIsFavorite] = useState(isLiked);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
-  // --- حالات الاختيار (Selection State) ---
   const [selectedStorage, setSelectedStorage] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
 
-  // فك بيانات extra_payload للتعامل مع المتغيرات (Storage/Color)
   const variants = useMemo(() => {
     try {
       const payload = typeof product.extra_payload === 'string' 
@@ -92,142 +90,147 @@ export const ProductCard = ({
   };
 
   return (
-    <motion.div layout className="relative flex flex-col bg-white border border-slate-200 rounded-sm overflow-hidden shadow-sm mb-6 transition-all">
+  <motion.div layout className="relative flex flex-col bg-surface border border-border rounded-sm overflow-hidden shadow-sm mb-6 transition-all" dir="rtl">
       
-      {/* 1. Header & Brand */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-50" dir="rtl">
-        <div className="flex items-center">
-          <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">
-            {product.Brand?.[0] || "V"}
-          </div>
-          <span className="mr-2 text-xs font-bold text-slate-800">{product.Brand || "Brand"}</span>
+    {/* 1. Header & Brand */}
+    <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+      <div className="flex items-center">
+        <div className="w-7 h-7 rounded-full bg-surface-2 flex items-center justify-center text-[10px] font-bold">
+          {product.Brand?.[0] || "V"}
         </div>
-        {isAdmin && product.status === 'archived' && (
-          <span className="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">مؤرشف</span>
-        )}
+        <span className="ms-2 text-xs font-bold text-text">{product.Brand || "Brand"}</span>
       </div>
-
-      {/* 2. Media Area (Image) */}
-      <div 
-        className={`relative w-full h-64 overflow-hidden cursor-pointer ${!isImageLoaded ? 'animate-pulse bg-slate-200' : ''}`} 
-        onClick={() => handleProductClick?.(product)}
-      >
-        
-        <Image 
-          src={product.Image} 
-          fill 
-          alt={product.Title} 
-          priority={priority} 
-          onLoadingComplete={() => setIsImageLoaded(true)} 
-          className={`object-cover transition-opacity duration-300 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`} 
-          unoptimized 
-        />
-        
-        {isAdmin && (
-          <div className="absolute top-2 left-2 z-30 flex flex-col gap-2">
-            <button onClick={(e) => { e.stopPropagation(); handleDelete?.(product.id, product.Title, product.imageName); }}
-              className="p-2 bg-white/90 text-red-500 rounded-full shadow-md hover:bg-red-50 active:scale-90 transition-all">
-              <X size={16} />
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); setEditingProduct?.(product); setIsDrawerOpen?.(true); }}
-              className="p-2 bg-white/90 text-blue-600 rounded-full shadow-md hover:bg-blue-50 active:scale-90 transition-all">
-              <Edit3 size={16} />
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); handleArchive?.(product.id, product.status === 'active' ? 'archived' : 'active'); }}
-              className={`p-2 rounded-full shadow-md transition-all active:scale-90 ${product.status === 'archived' ? 'bg-amber-500 text-white' : 'bg-white/90 text-amber-500'}`}>
-              <Archive size={16} />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* 3. Interaction Bar (Visitors Only) */}
-      {!isAdmin && (
-        <div className="px-3 pt-3 flex items-center justify-between">
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              const nextState = !isFavorite;
-              setIsFavorite(nextState); 
-              likedProduct?.(product.id, nextState); 
-            }}
-            className="active:scale-125 transition-transform"
-          >
-            <Heart size={22} color={isFavorite ? "#ed4956" : "#262626"} fill={isFavorite ? "#ed4956" : "none"} />
-          </button>
-          <ShoppingCart size={22} color="#262626" />
-        </div>
+      {isAdmin && product.status === 'archived' && (
+        <span className="text-[9px] bg-warning/20 text-warning px-2 py-0.5 rounded-full font-bold">مؤرشف</span>
       )}
+    </div>
 
-      {/* 4. Product Info */}
-      <div className="px-3 py-2 text-right" dir="rtl">
-        <h3 className="text-sm font-bold text-slate-900 mb-1 leading-tight">{product.Title}</h3>
-        
-        <div className="text-blue-600 font-black text-lg mb-2">
-          {product.Price} <small className="text-[10px]">د.ج</small>
-        </div>
-
-        {/* Variants Dropdowns - Visitors Only */}
-        {!isAdmin && variants.length > 0 && (
-          <div className="space-y-2 mb-3">
-            <div className="relative">
-              <select 
-                value={selectedStorage}
-                onChange={(e) => { setSelectedStorage(e.target.value); setSelectedColor(""); }}
-                className="w-full p-2 bg-slate-50 border border-slate-200 rounded text-xs font-bold appearance-none outline-none focus:border-blue-500"
-              >
-                <option value="">اختر السعة/المقاس...</option>
-                {allStorages.map((s: any) => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <ChevronDown size={14} className="absolute left-2 top-3 text-slate-400 pointer-events-none" />
-            </div>
-
-            <AnimatePresence>
-              {selectedStorage && availableColors.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="relative">
-                  <select 
-                    value={selectedColor}
-                    onChange={(e) => setSelectedColor(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded text-xs font-bold appearance-none outline-none focus:border-blue-500"
-                  >
-                    <option value="">اختر اللون...</option>
-                    {availableColors.map((c: any) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <ChevronDown size={14} className="absolute left-2 top-3 text-slate-400 pointer-events-none" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
-
-        {/* Admin Stats */}
-        {isAdmin && (
-          <div className="flex items-center gap-4 mt-2 pt-2 border-t border-slate-100">
-            <div className="flex items-center gap-1 text-pink-500">
-              <Heart size={14} fill="currentColor" />
-              <span className="text-xs font-bold">{product.likes_count || 0}</span>
-            </div>
-            <div className="flex items-center gap-1 text-slate-500">
-              <Eye size={14} />
-              <span className="text-xs font-bold">{product.views_count || 0}</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 5. Buy Button - Visitors Only */}
-      {!isAdmin && (
-        <div className="px-3 pb-3 mt-auto">
+    {/* 2. Media Area (Image) */}
+    <div 
+      className={`relative w-full h-64 overflow-hidden cursor-pointer ${!isImageLoaded ? 'animate-pulse bg-surface-2' : ''}`} 
+      onClick={() => handleProductClick?.(product)}
+    >
+      <Image 
+        src={product.Image} 
+        fill 
+        alt={product.Title} 
+        priority={priority} 
+        onLoadingComplete={() => setIsImageLoaded(true)} 
+        className={`object-cover transition-opacity duration-300 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`} 
+        unoptimized 
+      />
+      
+      {isAdmin && (
+        <div className="absolute top-2 start-2 z-30 flex flex-col gap-2">
           <button 
-            onClick={handleAddToCartWithValidation}
-            className="w-full py-2.5 bg-slate-900 text-white rounded-sm font-bold text-xs active:scale-[0.97] transition-all hover:bg-slate-800"
+            onClick={(e) => { e.stopPropagation(); handleDelete?.(product.id, product.Title, product.imageName); }}
+            className="p-2 bg-surface/90 text-error rounded-full shadow-md hover:bg-error/10 active:scale-90 transition-all"
           >
-            إضافة إلى السلة
+            <X size={16} />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setEditingProduct?.(product); setIsDrawerOpen?.(true); }}
+            className="p-2 bg-surface/90 text-info rounded-full shadow-md hover:bg-info/10 active:scale-90 transition-all"
+          >
+            <Edit3 size={16} />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); handleArchive?.(product.id, product.status === 'active' ? 'archived' : 'active'); }}
+            className={`p-2 rounded-full shadow-md transition-all active:scale-90 ${product.status === 'archived' ? 'bg-warning text-white' : 'bg-surface/90 text-warning'}`}
+          >
+            <Archive size={16} />
           </button>
         </div>
       )}
-    </motion.div>
-  );
+    </div>
+
+    {/* 3. Interaction Bar (Visitors Only) */}
+    {!isAdmin && (
+      <div className="px-3 pt-3 flex items-center justify-between">
+        <button 
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            const nextState = !isFavorite;
+            setIsFavorite(nextState); 
+            likedProduct?.(product.id, nextState); 
+          }}
+          className="active:scale-125 transition-transform"
+        >
+          <Heart size={22} color={isFavorite ? "var(--error)" : "var(--text)"} fill={isFavorite ? "var(--error)" : "none"} />
+        </button>
+        <ShoppingCart size={22} color="var(--text)" />
+      </div>
+    )}
+
+    {/* 4. Product Info */}
+    <div className="px-3 py-2 text-start">
+      <h3 className="text-sm font-bold text-text mb-1 leading-tight">{product.Title}</h3>
+      
+      <div className="text-primary font-black text-lg mb-2">
+        {product.Price} <small className="text-[10px]">د.ج</small>
+      </div>
+
+      {/* Variants Dropdowns - Visitors Only */}
+      {!isAdmin && variants.length > 0 && (
+        <div className="space-y-2 mb-3">
+          <div className="relative">
+            <select 
+              value={selectedStorage}
+              onChange={(e) => { setSelectedStorage(e.target.value); setSelectedColor(""); }}
+              className="w-full p-2 bg-surface-2 border border-border rounded text-xs font-bold appearance-none outline-none focus:border-primary"
+            >
+              <option value="">اختر السعة/المقاس...</option>
+              {allStorages.map((s: any) => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <ChevronDown size={14} className="absolute start-2 top-3 text-muted pointer-events-none" />
+          </div>
+
+          <AnimatePresence>
+            {selectedStorage && availableColors.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="relative">
+                <select 
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  className="w-full p-2 bg-surface-2 border border-border rounded text-xs font-bold appearance-none outline-none focus:border-primary"
+                >
+                  <option value="">اختر اللون...</option>
+                  {availableColors.map((c: any) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <ChevronDown size={14} className="absolute start-2 top-3 text-muted pointer-events-none" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Admin Stats */}
+      {isAdmin && (
+        <div className="flex items-center gap-4 mt-2 pt-2 border-t border-border">
+          <div className="flex items-center gap-1 text-error">
+            <Heart size={14} fill="currentColor" />
+            <span className="text-xs font-bold">{product.likes_count || 0}</span>
+          </div>
+          <div className="flex items-center gap-1 text-muted">
+            <Eye size={14} />
+            <span className="text-xs font-bold">{product.views_count || 0}</span>
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* 5. Buy Button - Visitors Only */}
+    {!isAdmin && (
+      <div className="px-3 pb-3 mt-auto">
+        <button 
+          onClick={handleAddToCartWithValidation}
+          className="w-full py-2.5 bg-primary text-white rounded-sm font-bold text-xs active:scale-[0.97] transition-all hover:bg-primary-hover"
+        >
+          إضافة إلى السلة
+        </button>
+      </div>
+    )}
+  </motion.div>
+);
 };
 
 export default ProductCard;

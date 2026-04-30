@@ -378,49 +378,70 @@ export async function uploadImageAction(formData) {
 }
 export async function updateSiteSettings(formData: FormData) {
   return adminAction(async () => {
- const file = formData.get('logo') as File | null;
- const siteTitle = formData.get('site_title') as string
-  const footerLinks = formData.get('footer_links') as string;
-  
-if (file && file.size > 0) {
+    const file = formData.get('logo') as File | null;
+    const siteTitle = formData.get('site_title') as string;
+    
+    // جلب الحقول الجديدة من الـ formData
+    const footerLinks = formData.get('footer_links') as string;
+    const tagline = formData.get('tagline') as string;
+    const aboutStore = formData.get('about_store') as string;
+    const paymentMethods = formData.get('payment_methods') as string;
+    const socialLinks = formData.get('social_links') as string;
+
+    // معالجة رفع اللوجو
+    if (file && file.size > 0) {
       const { error: uploadError } = await supabaseAdmin.storage
         .from('products')
         .upload('logo.webp', file, {
           upsert: true,
           contentType: 'image/webp',
-        })
+        });
 
       if (uploadError) {
-        console.error("UPLOAD ERROR:", uploadError)
-        throw new Error("فشل رفع اللوجو")
+        console.error("UPLOAD ERROR:", uploadError);
+        throw new Error("فشل رفع اللوجو");
       }
     }
-  // تحويل JSON
-  let parsedLinks = [];
-  try {
-    parsedLinks = footerLinks ? JSON.parse(footerLinks) : [];
-  } catch (e) {
-    console.error("خطأ في تحليل البيانات:", e);
-    throw new Error("تنسيق الروابط غير صالح");
-  }
 
-  // استخدام .update بدلاً من .upsert
-  const { error: dbError } = await supabaseAdmin
-    .from('site_settings')
-    .upsert({
-      footer_links: parsedLinks,
-   
-        site_title: siteTitle,
-   
-      // أضف أي حقول أخرى تريد تحديثها هنا فقط
-    })
-    .eq('id', 1); // تأكد من استهداف الصف الصحيح
+    // دالة مساعدة لتحليل الـ JSON بأمان لمنع انهيار السيرفر
+    const safeParse = (data: string | null) => {
+      try {
+        return data ? JSON.parse(data) : null;
+      } catch (e) {
+        console.error("Error parsing JSON field:", e);
+        return null;
+      }
+    };
 
-  if (dbError) {
-    console.error("خطأ قاعدة البيانات:", dbError);
-    throw new Error(dbError.message);
-  }})
+    // تجهيز البيانات للتحديث
+    const updateData = {
+      site_title: siteTitle,
+      footer_links: safeParse(footerLinks) || [],
+      tagline: safeParse(tagline),
+      about_store: safeParse(aboutStore),
+      payment_methods: safeParse(paymentMethods),
+      social_links: safeParse(socialLinks),
+    };
+
+    // التحديث في Supabase
+    // ملاحظة: بما أنك تستخدم id ثابت (1)، تأكد أن الصف موجود مسبقاً
+    const { error: dbError } = await supabaseAdmin
+      .from('site_settings')
+      .upsert({
+        id: 1, // الـ upsert يحتاج الـ id ليعرف أنه تحديث وليس إضافة
+        ...updateData,
+        updated_at: new Date().toISOString(), // جودة إضافية لتتبع التحديث
+      });
+
+    if (dbError) {
+      console.error("خطأ قاعدة البيانات:", dbError);
+      throw new Error(dbError.message);
+    }
+    
+    return { success: true };
+  });
 }
+
 
 export async function getSiteSettings() {
   const { data, error } = await supabaseAdmin
